@@ -111,7 +111,7 @@ if 'deals_history' not in st.session_state:
         })
 
 # ==============================================================================
-# Bespoke Ultra-Clean Institutional Styling (Identical to local Tailwind UI)
+# Bespoke Ultra-Clean Institutional Styling (High Contrast & Perfect Theme Colors)
 # ==============================================================================
 st.markdown("""
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -140,19 +140,19 @@ st.markdown("""
 
     /* Glass Panels */
     .glass-panel {
-        background: rgba(15, 23, 42, 0.75);
+        background: rgba(15, 23, 42, 0.85);
         backdrop-filter: blur(14px);
         -webkit-backdrop-filter: blur(14px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 16px;
         padding: 1.75rem 2rem;
         box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7);
         margin-bottom: 2rem;
     }
     .glass-card {
-        background: rgba(30, 41, 59, 0.45);
+        background: rgba(30, 41, 59, 0.55);
         backdrop-filter: blur(8px);
-        border: 1px solid rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 14px;
         padding: 1.25rem;
     }
@@ -164,9 +164,9 @@ st.markdown("""
         justify-content: space-between;
         padding: 0.85rem 1.5rem;
         margin-bottom: 1.75rem;
-        background: rgba(15, 23, 42, 0.85);
+        background: rgba(15, 23, 42, 0.9);
         backdrop-filter: blur(16px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 16px;
     }
     .top-nav-left {
@@ -183,7 +183,7 @@ st.markdown("""
         align-items: center;
         justify-content: center;
         font-size: 20px;
-        box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35);
+        box-shadow: 0 4px 14px rgba(22, 163, 74, 0.4);
     }
     .logo-brand {
         font-size: 1.25rem;
@@ -196,9 +196,9 @@ st.markdown("""
         font-weight: 600;
         padding: 0.2rem 0.65rem;
         border-radius: 9999px;
-        background: rgba(34, 197, 94, 0.12);
+        background: rgba(34, 197, 94, 0.15);
         color: #34d399;
-        border: 1px solid rgba(34, 197, 94, 0.25);
+        border: 1px solid rgba(34, 197, 94, 0.3);
     }
     .status-pill {
         display: flex;
@@ -206,9 +206,9 @@ st.markdown("""
         gap: 0.5rem;
         padding: 0.4rem 0.95rem;
         border-radius: 9999px;
-        background: rgba(10, 15, 29, 0.9);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        color: #cbd5e1;
+        background: rgba(10, 15, 29, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: #e2e8f0;
         font-size: 0.75rem;
         font-family: 'JetBrains Mono', monospace;
     }
@@ -224,8 +224,8 @@ st.markdown("""
     .hero-box {
         position: relative;
         overflow: hidden;
-        background: rgba(15, 23, 42, 0.75);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(15, 23, 42, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 16px;
         padding: 2.25rem 2.5rem;
         margin-bottom: 2rem;
@@ -242,9 +242,227 @@ st.markdown("""
         pointer-events: none;
     }
 
-    /* KPI Cards */
+    /* =========================================================================
+       CRITICAL HIGH-CONTRAST FORM & WIDGET FIXES
+       ========================================================================= */
+
+    /* 1. Global Labels (Property Name, Target Purchase Price, etc.) */
+    label[data-testid="stWidgetLabel"],
+    div[data-testid="stWidgetLabel"],
+    div[data-testid="stWidgetLabel"] p,
+    div[data-testid="stWidgetLabel"] span,
+    div[data-testid="stTextInput"] label,
+    div[data-testid="stTextInput"] label p,
+    div[data-testid="stNumberInput"] label,
+    div[data-testid="stNumberInput"] label p,
+    .stWidgetLabel p {
+        color: #f8fafc !important;
+        font-weight: 700 !important;
+        font-size: 0.88rem !important;
+        letter-spacing: -0.01em !important;
+    }
+
+    /* 2. Text & Number Inputs */
+    .stTextInput input, 
+    .stNumberInput input,
+    div[data-baseweb="input"] input {
+        background-color: #0b1120 !important;
+        border: 1px solid #334155 !important;
+        color: #ffffff !important;
+        border-radius: 10px !important;
+        font-weight: 600 !important;
+        font-size: 0.95rem !important;
+        padding: 0.65rem 0.85rem !important;
+    }
+    .stTextInput input:focus, 
+    .stNumberInput input:focus,
+    div[data-baseweb="input"]:focus-within {
+        border-color: #22c55e !important;
+        box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.35) !important;
+    }
+    div[data-baseweb="input"] {
+        background-color: #0b1120 !important;
+        border: 1px solid #334155 !important;
+        border-radius: 10px !important;
+    }
+
+    /* 3. Number Input Stepper Controls (- and +) */
+    div[data-testid="stNumberInput"] button,
+    div[data-testid="stNumberInputContainer"] button,
+    div[data-baseweb="button-group"] button {
+        background-color: #1e293b !important;
+        color: #f8fafc !important;
+        border: 1px solid #475569 !important;
+        border-radius: 6px !important;
+        font-weight: 700 !important;
+    }
+    div[data-testid="stNumberInput"] button:hover,
+    div[data-testid="stNumberInputContainer"] button:hover {
+        background-color: #334155 !important;
+        color: #22c55e !important;
+        border-color: #22c55e !important;
+    }
+    div[data-testid="stNumberInput"] button svg,
+    div[data-testid="stNumberInputContainer"] button svg {
+        fill: #f8fafc !important;
+        color: #f8fafc !important;
+    }
+
+    /* 4. File Uploader Dropzones */
+    section[data-testid="stFileUploaderDropzone"],
+    div[data-testid="stFileUploaderDropzone"] {
+        background: rgba(15, 23, 42, 0.75) !important;
+        border: 1.5px dashed #475569 !important;
+        border-radius: 14px !important;
+        padding: 1.25rem 0.75rem !important;
+        transition: all 0.25s ease !important;
+    }
+    section[data-testid="stFileUploaderDropzone"]:hover,
+    div[data-testid="stFileUploaderDropzone"]:hover {
+        border-color: #22c55e !important;
+        background: rgba(34, 197, 94, 0.08) !important;
+    }
+
+    /* 5. File Uploader Browse Button ("Browse files" / "Upload") */
+    section[data-testid="stFileUploaderDropzone"] button,
+    div[data-testid="stFileUploaderDropzone"] button,
+    div[data-testid="stFileUploader"] button {
+        background: #1e293b !important;
+        color: #ffffff !important;
+        border: 1px solid #64748b !important;
+        border-radius: 8px !important;
+        font-weight: 700 !important;
+        font-size: 0.85rem !important;
+        padding: 0.45rem 1rem !important;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
+        transition: all 0.2s ease !important;
+    }
+    section[data-testid="stFileUploaderDropzone"] button:hover,
+    div[data-testid="stFileUploaderDropzone"] button:hover,
+    div[data-testid="stFileUploader"] button:hover {
+        background: #22c55e !important;
+        color: #05070e !important;
+        border-color: #22c55e !important;
+        transform: translateY(-1px) !important;
+    }
+    section[data-testid="stFileUploaderDropzone"] button p,
+    section[data-testid="stFileUploaderDropzone"] button span,
+    div[data-testid="stFileUploaderDropzone"] button p,
+    div[data-testid="stFileUploaderDropzone"] button span {
+        color: #ffffff !important;
+        font-weight: 700 !important;
+    }
+    section[data-testid="stFileUploaderDropzone"] button:hover p,
+    section[data-testid="stFileUploaderDropzone"] button:hover span {
+        color: #05070e !important;
+    }
+
+    /* 6. File Uploader Dropzone Instructions & File Limits Text */
+    section[data-testid="stFileUploaderDropzone"] small,
+    section[data-testid="stFileUploaderDropzone"] span,
+    div[data-testid="stFileUploaderDropzoneInstructions"] small,
+    div[data-testid="stFileUploaderDropzoneInstructions"] span,
+    div[data-testid="stFileUploaderDropzoneInstructions"] p,
+    div[data-testid="stFileUploaderDropzoneInstructions"] div {
+        color: #cbd5e1 !important;
+        font-size: 0.78rem !important;
+        font-weight: 500 !important;
+    }
+    div[data-testid="stFileUploaderFileName"] {
+        color: #34d399 !important;
+        font-weight: 700 !important;
+    }
+
+    /* 7. FORM SUBMIT BUTTON: "Start AI Underwriting" */
+    div[data-testid="stFormSubmitButton"] button,
+    button[data-testid="stBaseButton-primaryFormSubmit"],
+    button[data-testid="baseButton-primaryFormSubmit"],
+    button[kind="primaryFormSubmit"],
+    button[kind="primary"] {
+        background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
+        color: #ffffff !important;
+        font-weight: 800 !important;
+        font-size: 1rem !important;
+        border: 1px solid #22c55e !important;
+        border-radius: 12px !important;
+        padding: 0.75rem 2rem !important;
+        box-shadow: 0 4px 20px rgba(34, 197, 94, 0.45) !important;
+        transition: all 0.2s ease !important;
+        letter-spacing: -0.01em !important;
+    }
+    div[data-testid="stFormSubmitButton"] button:hover,
+    button[data-testid="stBaseButton-primaryFormSubmit"]:hover,
+    button[data-testid="baseButton-primaryFormSubmit"]:hover,
+    button[kind="primaryFormSubmit"]:hover,
+    button[kind="primary"]:hover {
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+        color: #ffffff !important;
+        box-shadow: 0 8px 30px rgba(34, 197, 94, 0.65) !important;
+        transform: translateY(-2px) !important;
+        border-color: #4ade80 !important;
+    }
+    div[data-testid="stFormSubmitButton"] button p,
+    div[data-testid="stFormSubmitButton"] button span,
+    button[data-testid="stBaseButton-primaryFormSubmit"] p,
+    button[data-testid="baseButton-primaryFormSubmit"] p {
+        color: #ffffff !important;
+        font-weight: 800 !important;
+        font-size: 1rem !important;
+    }
+
+    /* 8. Download Buttons */
+    div[data-testid="stDownloadButton"] button,
+    div.stDownloadButton > button {
+        background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
+        color: #ffffff !important;
+        font-weight: 700 !important;
+        border: 1px solid #22c55e !important;
+        border-radius: 10px !important;
+        padding: 0.6rem 1.25rem !important;
+        font-size: 0.85rem !important;
+        box-shadow: 0 4px 16px rgba(22, 163, 74, 0.4) !important;
+        transition: all 0.2s ease !important;
+    }
+    div[data-testid="stDownloadButton"] button:hover,
+    div.stDownloadButton > button:hover {
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+        color: #ffffff !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 8px 24px rgba(22, 163, 74, 0.6) !important;
+    }
+    div[data-testid="stDownloadButton"] button p,
+    div[data-testid="stDownloadButton"] button span {
+        color: #ffffff !important;
+        font-weight: 700 !important;
+    }
+
+    /* 9. Reset / Delete Button */
+    button[kind="secondary"],
+    div.stButton > button {
+        background: #1e293b !important;
+        color: #f87171 !important;
+        font-weight: 700 !important;
+        border: 1px solid rgba(248, 113, 113, 0.4) !important;
+        border-radius: 10px !important;
+        padding: 0.6rem 1.25rem !important;
+        font-size: 0.85rem !important;
+        transition: all 0.2s ease !important;
+    }
+    button[kind="secondary"]:hover,
+    div.stButton > button:hover {
+        background: rgba(239, 68, 68, 0.2) !important;
+        color: #fca5a5 !important;
+        border-color: #ef4444 !important;
+    }
+    button[kind="secondary"] p,
+    button[kind="secondary"] span {
+        color: #f87171 !important;
+        font-weight: 700 !important;
+    }
+
+    /* 10. KPI Cards */
     .kpi-card {
-        background: rgba(30, 41, 59, 0.5);
+        background: rgba(30, 41, 59, 0.55);
         backdrop-filter: blur(8px);
         border: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 14px;
@@ -254,10 +472,10 @@ st.markdown("""
     }
     .kpi-title {
         font-size: 0.75rem;
-        font-weight: 600;
-        color: #94a3b8;
+        font-weight: 700;
+        color: #cbd5e1;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.06em;
         margin-bottom: 0.35rem;
     }
     .kpi-val {
@@ -269,103 +487,42 @@ st.markdown("""
         line-height: 1.2;
     }
     .kpi-sub {
-        font-size: 0.75rem;
-        color: #64748b;
+        font-size: 0.78rem;
+        color: #94a3b8;
         margin-top: 0.35rem;
         font-family: 'JetBrains Mono', monospace;
     }
 
-    /* Modern Dark Tables */
+    /* 11. Modern Dark Tables */
     .lux-table {
         width: 100%;
         border-collapse: collapse;
-        font-size: 0.8rem;
+        font-size: 0.82rem;
         text-align: left;
     }
     .lux-table th {
         padding: 0.75rem 0.85rem;
-        font-weight: 600;
-        color: #94a3b8;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        font-size: 0.72rem;
+        font-weight: 700;
+        color: #cbd5e1;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+        font-size: 0.74rem;
         text-transform: uppercase;
         letter-spacing: 0.05em;
     }
     .lux-table td {
         padding: 0.75rem 0.85rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        color: #e2e8f0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        color: #f1f5f9;
         font-family: 'JetBrains Mono', monospace;
     }
     .lux-table tr:hover td {
-        background: rgba(255, 255, 255, 0.03);
+        background: rgba(255, 255, 255, 0.04);
     }
 
-    /* Form Action Submit Button */
-    div.stButton > button:first-child {
-        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
-        color: #ffffff !important;
-        font-weight: 700 !important;
-        font-size: 0.95rem !important;
-        border: none !important;
-        border-radius: 12px !important;
-        padding: 0.75rem 1.75rem !important;
-        box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4) !important;
-        transition: all 0.2s ease !important;
-    }
-    div.stButton > button:first-child:hover {
-        transform: translateY(-2px) !important;
-        box-shadow: 0 15px 30px -5px rgba(37, 99, 235, 0.6) !important;
-        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
-    }
-
-    /* File Upload Dropzones */
-    section[data-testid="stFileUploaderDropzone"] {
-        background: rgba(15, 23, 42, 0.6) !important;
-        border: 1px dashed rgba(255, 255, 255, 0.18) !important;
-        border-radius: 12px !important;
-        padding: 1.25rem 0.75rem !important;
-        transition: all 0.2s ease !important;
-    }
-    section[data-testid="stFileUploaderDropzone"]:hover {
-        border-color: #3b82f6 !important;
-        background: rgba(37, 99, 235, 0.05) !important;
-    }
-
-    /* Input Fields */
-    .stTextInput input, .stNumberInput input {
-        background-color: #0a0f1d !important;
-        border: 1px solid rgba(255, 255, 255, 0.12) !important;
-        color: #ffffff !important;
-        border-radius: 10px !important;
-        font-weight: 500 !important;
-    }
-    .stTextInput input:focus, .stNumberInput input:focus {
-        border-color: #3b82f6 !important;
-        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25) !important;
-    }
-
-    /* Download Buttons */
-    div.stDownloadButton > button {
-        background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
-        color: #ffffff !important;
-        font-weight: 700 !important;
-        border: none !important;
-        border-radius: 10px !important;
-        padding: 0.6rem 1.25rem !important;
-        font-size: 0.85rem !important;
-        box-shadow: 0 6px 18px -4px rgba(22, 163, 74, 0.4) !important;
-        transition: all 0.2s ease !important;
-    }
-    div.stDownloadButton > button:hover {
-        transform: translateY(-1px) !important;
-        box-shadow: 0 10px 22px -4px rgba(22, 163, 74, 0.6) !important;
-    }
-
-    /* Expander Container */
+    /* 12. Expander Container */
     div[data-testid="stExpander"] {
-        background: rgba(15, 23, 42, 0.75) !important;
-        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        background: rgba(15, 23, 42, 0.85) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
         border-radius: 14px !important;
         overflow: hidden !important;
         margin-bottom: 1.5rem !important;
@@ -390,7 +547,7 @@ st.markdown("""
                 <span class="logo-brand">LINWOOD</span>
                 <span class="badge-pill">AI Underwriter</span>
             </div>
-            <p style="font-size: 0.75rem; color: #94a3b8; margin: 0;">Institutional Pro Forma Pipeline</p>
+            <p style="font-size: 0.75rem; color: #cbd5e1; margin: 0;">Institutional Pro Forma Pipeline</p>
         </div>
     </div>
     <div class="status-pill">
@@ -407,14 +564,14 @@ st.markdown("""
 <div class="hero-box">
     <div class="hero-glow"></div>
     <div style="max-width: 780px;">
-        <div style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; font-weight: 600; color: #34d399; background: rgba(34, 197, 94, 0.12); padding: 0.25rem 0.75rem; border-radius: 9999px; border: 1px solid rgba(34, 197, 94, 0.25); margin-bottom: 0.85rem;">
+        <div style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; font-weight: 700; color: #34d399; background: rgba(34, 197, 94, 0.15); padding: 0.25rem 0.75rem; border-radius: 9999px; border: 1px solid rgba(34, 197, 94, 0.3); margin-bottom: 0.85rem;">
             <span>✨</span>
             <span>Autonomous Deal Ingestion & Model Injection</span>
         </div>
         <h1 style="font-size: 2.1rem; font-weight: 800; color: #ffffff; letter-spacing: -0.03em; line-height: 1.2; margin: 0 0 0.75rem 0;">
             From Raw Data Room to Ready Pro Forma in Seconds
         </h1>
-        <p style="font-size: 0.92rem; color: #94a3b8; line-height: 1.6; margin: 0;">
+        <p style="font-size: 0.95rem; color: #cbd5e1; line-height: 1.6; margin: 0;">
             Upload your Broker OM, Rent Roll, and T-12. The engine deterministically extracts tenant leases, standardizes the Chart of Accounts, preserves all 104,720 formulas, and delivers a presentation-ready Waterman Acquisition Excel model.
         </p>
     </div>
@@ -432,7 +589,7 @@ st.markdown("""
             Upload Custom Deal Data Room
         </h2>
     </div>
-    <p style="font-size: 0.82rem; color: #94a3b8; margin: 0 0 1.25rem 0;">
+    <p style="font-size: 0.85rem; color: #94a3b8; margin: 0 0 1.25rem 0;">
         Upload your raw deal files to generate a custom populated Waterman Pro Forma
     </p>
 """, unsafe_allow_html=True)
@@ -442,35 +599,35 @@ with st.form("custom_upload_form", clear_on_submit=False):
     prop_name = c1.text_input("Property Name", value="Parkview Residences", placeholder="e.g. Parkview Residences")
     prop_price = c2.number_input("Target Purchase Price ($)", min_value=100000.0, value=25000000.0, step=250000.0, format="%.2f")
     
-    st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
     f1, f2, f3 = st.columns(3)
     
     with f1:
         st.markdown("""
-        <div style="text-align: center; margin-bottom: 0.4rem;">
-            <p style="font-size: 1.4rem; margin: 0;">📗</p>
-            <p style="font-size: 0.82rem; font-weight: 700; color: #ffffff; margin: 0.15rem 0 0 0;">Rent Roll</p>
-            <p style="font-size: 0.72rem; color: #64748b; margin: 0;">.xlsx, .xls, .pdf</p>
+        <div style="text-align: center; margin-bottom: 0.5rem; background: rgba(30, 41, 59, 0.6); padding: 0.6rem; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.08);">
+            <p style="font-size: 1.5rem; margin: 0;">📗</p>
+            <p style="font-size: 0.88rem; font-weight: 700; color: #ffffff; margin: 0.2rem 0 0 0;">Rent Roll</p>
+            <p style="font-size: 0.72rem; color: #94a3b8; margin: 0; font-family: 'JetBrains Mono', monospace;">.xlsx, .xls, .pdf</p>
         </div>
         """, unsafe_allow_html=True)
         rr_file = st.file_uploader("Upload Rent Roll", type=["xlsx", "xls", "pdf"], key="form_rr", label_visibility="collapsed")
 
     with f2:
         st.markdown("""
-        <div style="text-align: center; margin-bottom: 0.4rem;">
-            <p style="font-size: 1.4rem; margin: 0;">📊</p>
-            <p style="font-size: 0.82rem; font-weight: 700; color: #ffffff; margin: 0.15rem 0 0 0;">T-12 Operating Statement</p>
-            <p style="font-size: 0.72rem; color: #64748b; margin: 0;">.xlsx, .xls, .pdf</p>
+        <div style="text-align: center; margin-bottom: 0.5rem; background: rgba(30, 41, 59, 0.6); padding: 0.6rem; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.08);">
+            <p style="font-size: 1.5rem; margin: 0;">📊</p>
+            <p style="font-size: 0.88rem; font-weight: 700; color: #ffffff; margin: 0.2rem 0 0 0;">T-12 Operating Statement</p>
+            <p style="font-size: 0.72rem; color: #94a3b8; margin: 0; font-family: 'JetBrains Mono', monospace;">.xlsx, .xls, .pdf</p>
         </div>
         """, unsafe_allow_html=True)
         t12_file = st.file_uploader("Upload T-12", type=["xlsx", "xls", "pdf"], key="form_t12", label_visibility="collapsed")
 
     with f3:
         st.markdown("""
-        <div style="text-align: center; margin-bottom: 0.4rem;">
-            <p style="font-size: 1.4rem; margin: 0;">📑</p>
-            <p style="font-size: 0.82rem; font-weight: 700; color: #ffffff; margin: 0.15rem 0 0 0;">Offering Memo (OM)</p>
-            <p style="font-size: 0.72rem; color: #64748b; margin: 0;">.pdf brochure</p>
+        <div style="text-align: center; margin-bottom: 0.5rem; background: rgba(30, 41, 59, 0.6); padding: 0.6rem; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.08);">
+            <p style="font-size: 1.5rem; margin: 0;">📑</p>
+            <p style="font-size: 0.88rem; font-weight: 700; color: #ffffff; margin: 0.2rem 0 0 0;">Offering Memo (OM)</p>
+            <p style="font-size: 0.72rem; color: #94a3b8; margin: 0; font-family: 'JetBrains Mono', monospace;">.pdf brochure</p>
         </div>
         """, unsafe_allow_html=True)
         om_file = st.file_uploader("Upload OM", type=["pdf"], key="form_om", label_visibility="collapsed")
@@ -480,8 +637,8 @@ with st.form("custom_upload_form", clear_on_submit=False):
     b_col1, b_col2 = st.columns([2, 1])
     with b_col1:
         st.markdown("""
-        <p style="font-size: 0.78rem; color: #64748b; margin-top: 0.6rem;">
-            ⚡ Uses institutional Waterman Empty Template with 104,720 live formulas preserved.
+        <p style="font-size: 0.82rem; color: #cbd5e1; margin-top: 0.65rem; font-weight: 500;">
+            ⚡ Uses institutional Waterman Empty Template with <span style="color: #34d399; font-weight: 700; font-family: 'JetBrains Mono', monospace;">104,720 live formulas</span> preserved.
         </p>
         """, unsafe_allow_html=True)
     with b_col2:
@@ -539,7 +696,7 @@ st.markdown(f"""
     <h2 style="font-size: 1.35rem; font-weight: 700; color: #ffffff; letter-spacing: -0.02em; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
         <span>📑</span> Underwritten Pro Forma Models
     </h2>
-    <span style="font-size: 0.78rem; color: #94a3b8; font-family: 'JetBrains Mono', monospace; background: rgba(30, 41, 59, 0.6); padding: 0.25rem 0.75rem; border-radius: 9999px; border: 1px solid rgba(255, 255, 255, 0.08);">
+    <span style="font-size: 0.78rem; color: #cbd5e1; font-family: 'JetBrains Mono', monospace; background: rgba(30, 41, 59, 0.75); padding: 0.25rem 0.75rem; border-radius: 9999px; border: 1px solid rgba(255, 255, 255, 0.1);">
         Persisted Deals: {deals_count}
     </span>
 </div>
@@ -547,10 +704,10 @@ st.markdown(f"""
 
 if deals_count == 0:
     st.markdown("""
-    <div style="background: rgba(15, 23, 42, 0.45); border: 1px dashed rgba(255, 255, 255, 0.12); border-radius: 16px; padding: 3rem 2rem; text-align: center;">
+    <div style="background: rgba(15, 23, 42, 0.6); border: 1px dashed rgba(255, 255, 255, 0.15); border-radius: 16px; padding: 3rem 2rem; text-align: center;">
         <p style="font-size: 2.2rem; margin-bottom: 0.5rem;">📂</p>
         <p style="font-size: 1rem; font-weight: 700; color: #ffffff; margin: 0 0 0.25rem 0;">No Underwritten Deals Yet</p>
-        <p style="font-size: 0.82rem; color: #64748b; margin: 0;">Upload your raw deal data room above to generate a custom populated Waterman Pro Forma.</p>
+        <p style="font-size: 0.85rem; color: #94a3b8; margin: 0;">Upload your raw deal data room above to generate a custom populated Waterman Pro Forma.</p>
     </div>
     """, unsafe_allow_html=True)
 else:
@@ -575,7 +732,7 @@ else:
                 <div style="margin-bottom: 0.5rem;">
                     <span class="badge-pill">● Underwriting Complete</span>
                     <h3 style="font-size: 1.5rem; font-weight: 800; color: #ffffff; margin: 0.35rem 0 0.15rem 0; letter-spacing: -0.02em;">{deal.property_name}</h3>
-                    <p style="font-size: 0.8rem; color: #94a3b8; margin: 0;">📍 {deal.address}, {deal.city_state_zip}</p>
+                    <p style="font-size: 0.82rem; color: #cbd5e1; margin: 0;">📍 {deal.address}, {deal.city_state_zip}</p>
                 </div>
                 """, unsafe_allow_html=True)
                 
@@ -660,12 +817,12 @@ else:
                 for u in deal.unit_mix:
                     um_rows_html += f"""
                     <tr>
-                        <td style="font-weight: 600; color: #ffffff;">{u.name}</td>
+                        <td style="font-weight: 700; color: #ffffff;">{u.name}</td>
                         <td style="text-align: right;">{u.unit_count}</td>
                         <td style="text-align: right;">{u.avg_sf:,.0f}</td>
                         <td style="text-align: right; color: #34d399; font-weight: 700;">${u.in_place_rent:,.2f}</td>
-                        <td style="text-align: right; color: #94a3b8;">${u.market_rent:,.2f}</td>
-                        <td style="text-align: right; color: #64748b;">${u.reno_capex_per_unit:,.0f}</td>
+                        <td style="text-align: right; color: #cbd5e1;">${u.market_rent:,.2f}</td>
+                        <td style="text-align: right; color: #94a3b8;">${u.reno_capex_per_unit:,.0f}</td>
                     </tr>
                     """
                 st.markdown(f"""
@@ -674,7 +831,7 @@ else:
                         <h4 style="font-size: 0.88rem; font-weight: 700; color: #ffffff; margin: 0; display: flex; align-items: center; gap: 0.4rem;">
                             <span style="color: #34d399;">⊞</span> Normalized Unit Mix
                         </h4>
-                        <span style="font-size: 0.72rem; color: #64748b;">From Rent Roll & OM</span>
+                        <span style="font-size: 0.72rem; color: #94a3b8;">From Rent Roll & OM</span>
                     </div>
                     <div style="overflow-x: auto;">
                         <table class="lux-table">
@@ -711,8 +868,8 @@ else:
                 for cat, alloc, per_u, total in t12_items:
                     t12_rows_html += f"""
                     <tr>
-                        <td style="font-weight: 600; color: #ffffff;">{cat}</td>
-                        <td style="color: #94a3b8; font-size: 0.72rem;">{alloc}</td>
+                        <td style="font-weight: 700; color: #ffffff;">{cat}</td>
+                        <td style="color: #cbd5e1; font-size: 0.72rem;">{alloc}</td>
                         <td style="text-align: right; color: #cbd5e1;">${per_u:,.0f}</td>
                         <td style="text-align: right; color: #34d399; font-weight: 700;">${total:,.0f}</td>
                     </tr>
@@ -723,7 +880,7 @@ else:
                         <h4 style="font-size: 0.88rem; font-weight: 700; color: #ffffff; margin: 0; display: flex; align-items: center; gap: 0.4rem;">
                             <span style="color: #10b981;">📋</span> T-12 Operating Expenses (Standard COA)
                         </h4>
-                        <span style="font-size: 0.72rem; color: #64748b;">From Accounting P&L</span>
+                        <span style="font-size: 0.72rem; color: #94a3b8;">From Accounting P&L</span>
                     </div>
                     <div style="overflow-x: auto;">
                         <table class="lux-table">
