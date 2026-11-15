@@ -32,11 +32,16 @@ def inject_waterman_model(
     Recalculates and caches all formula results via Microsoft Excel COM if available.
     """
     import shutil
-    import pythoncom
-    import win32com.client
 
-    # Check if win32com is available and template is answer-key aligned
-    has_com = True
+    # Check if win32com is available and supported on host OS
+    has_com = False
+    try:
+        import pythoncom
+        import win32com.client
+        has_com = True
+    except (ImportError, Exception):
+        has_com = False
+
     abs_template = os.path.abspath(template_path)
     abs_output = os.path.abspath(output_path)
 
@@ -45,12 +50,13 @@ def inject_waterman_model(
 
     excel = None
     wb_xl = None
-    try:
+    if has_com:
         try:
-            pythoncom.CoInitialize()
-        except Exception:
-            pass
-        excel = win32com.client.Dispatch('Excel.Application')
+            try:
+                pythoncom.CoInitialize()
+            except Exception:
+                pass
+            excel = win32com.client.Dispatch('Excel.Application')
         excel.Visible = False
         excel.DisplayAlerts = False
         wb_xl = excel.Workbooks.Open(abs_output)

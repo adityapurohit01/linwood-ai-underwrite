@@ -8,7 +8,8 @@ pydantic>=2.0.0
 openpyxl>=3.1.2
 pandas>=2.0.0
 xlrd>=2.0.1
-pywin32>=306
+# Windows-only Excel COM acceleration (skipped automatically on Linux/Cloud)
+pywin32>=306; sys_platform == 'win32'
 
 # Optional Streamlit Alternative UI
 streamlit>=1.30.0

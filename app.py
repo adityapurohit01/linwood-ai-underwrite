@@ -279,8 +279,9 @@ def view_lineage():
 
 if __name__ == "__main__":
     import uvicorn
+    port = int(os.environ.get("PORT", 8000))
     print("\n" + "="*70)
     print("🚀 LINWOOD AI UNDERWRITING ENGINE IS STARTING...")
-    print("📍 Open your browser at: http://localhost:8000")
+    print(f"📍 Server listening at: http://0.0.0.0:{port} (local: http://localhost:{port})")
     print("="*70 + "\n")
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=port)
