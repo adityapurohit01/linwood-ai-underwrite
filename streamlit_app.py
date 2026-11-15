@@ -32,42 +32,28 @@ os.makedirs(UPLOADS_DIR, exist_ok=True)
 
 # Helper function to generate lineage audit text
 def generate_lineage_report(deal: DealUnderwriting) -> str:
-    try:
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
-        units = max(getattr(deal, 'total_units', 1), 1)
-        price_per_u = getattr(deal, 'purchase_price', 0.0) / units
-        exp = getattr(deal, 't12_expenses', None)
-        if exp:
-            unit_opex = exp.payroll + exp.utilities + exp.repairs_maint + exp.turnover + exp.marketing + exp.general_admin + exp.insurance
-            total_opex = (unit_opex * deal.total_units) + exp.real_estate_taxes
-            re_taxes = exp.real_estate_taxes
-        else:
-            unit_opex = 0.0
-            total_opex = 0.0
-            re_taxes = 0.0
-        
-        prop_name = getattr(deal, 'property_name', 'Real Estate Asset')
-        addr = getattr(deal, 'address', 'Primary MSA')
-        csz = getattr(deal, 'city_state_zip', '')
-        price = getattr(deal, 'purchase_price', 0.0)
-        rsf = getattr(deal, 'total_rsf', 0.0)
-        year_built = getattr(deal, 'year_built', '1998 / Renovated 2021')
-        
-        report = f"""# Autonomous Data Lineage & Audit Provenance Report
-**Asset:** {prop_name}  
-**Address:** {addr}, {csz}  
-**Underwritten Valuation:** ${price:,.2f} (${price_per_u:,.2f} / unit)  
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
+    units = max(deal.total_units, 1)
+    price_per_u = deal.purchase_price / units
+    exp = deal.t12_expenses
+    unit_opex = exp.payroll + exp.utilities + exp.repairs_maint + exp.turnover + exp.marketing + exp.general_admin + exp.insurance
+    total_opex = (unit_opex * deal.total_units) + exp.real_estate_taxes
+    
+    report = f"""# Autonomous Data Lineage & Audit Provenance Report
+**Asset:** {deal.property_name}  
+**Address:** {deal.address}, {deal.city_state_zip}  
+**Underwritten Valuation:** ${deal.purchase_price:,.2f} (${price_per_u:,.2f} / unit)  
 **Execution Timestamp:** {timestamp}  
 **Model Architecture:** Waterman Master Pro Forma (13 Sheets, 104,720 Active Formulas)  
 
 ---
 
 ## 1. Executive Summary & Underwriting Assumptions
-- **Total Capacity:** {units} Units
-- **Rentable Area:** {rsf:,.0f} RSF (Avg: {rsf / units:,.0f} SF / unit)
-- **Year Built:** {year_built}
+- **Total Capacity:** {deal.total_units} Units
+- **Rentable Area:** {deal.total_rsf:,.0f} RSF (Avg: {deal.total_rsf / units:,.0f} SF / unit)
+- **Year Built:** {getattr(deal, 'year_built', '1998 / Renovated 2021')}
 - **Trailing-12 Operating Expenses:** ${total_opex:,.2f} (${unit_opex:,.2f} / unit / yr excluding taxes)
-- **Real Estate Tax Assessment:** ${re_taxes:,.2f} / year
+- **Real Estate Tax Assessment:** ${exp.real_estate_taxes:,.2f} / year
 
 ---
 
@@ -75,11 +61,10 @@ def generate_lineage_report(deal: DealUnderwriting) -> str:
 | Floorplan Tier | Unit Count | Avg SF | In-Place Rent | Market Rent | Reno Capex / Unit |
 | :--- | :---: | :---: | :---: | :---: | :---: |
 """
-        for u in getattr(deal, 'unit_mix', []):
-            report += f"| {u.name} | {u.unit_count} | {u.avg_sf:,.0f} SF | ${u.in_place_rent:,.2f} | ${u.market_rent:,.2f} | ${u.reno_capex_per_unit:,.2f} ({u.renovated_units} units) |\n"
+    for u in deal.unit_mix:
+        report += f"| {u.name} | {u.unit_count} | {u.avg_sf:,.0f} SF | ${u.in_place_rent:,.2f} | ${u.market_rent:,.2f} | ${u.reno_capex_per_unit:,.2f} ({u.renovated_units} units) |\n"
 
-        if exp:
-            report += f"""
+    report += f"""
 ---
 
 ## 3. Standardized Operating Expenses (Linwood COA)
@@ -93,9 +78,7 @@ def generate_lineage_report(deal: DealUnderwriting) -> str:
 | General & Administrative | Software / Compliance | ${exp.general_admin:,.2f} | ${exp.general_admin * deal.total_units:,.2f} |
 | Insurance (P&C / Liability) | Underwritten Policy | ${exp.insurance:,.2f} | ${exp.insurance * deal.total_units:,.2f} |
 | Real Estate Taxes | County Mill Rate Assessment | ${exp.real_estate_taxes / units:,.2f} | ${exp.real_estate_taxes:,.2f} |
-"""
 
-        report += f"""
 ---
 
 ## 4. Mathematical Integrity & Lineage Verification
@@ -103,9 +86,68 @@ def generate_lineage_report(deal: DealUnderwriting) -> str:
 - **Answer-Key Accuracy:** 100% verified against institutional underwriting standards.
 - **Debt & Waterfalls:** Senior loan sizing, floating SOFR curve, and Tier-1/Tier-2 promote distributions are dynamically calculated.
 """
-        return report
-    except Exception as e:
-        return f"# Lineage Audit Trail\n\n- Asset: {getattr(deal, 'property_name', 'Property')}\n- Status: 104,720 live formulas verified intact.\n- Audit Provenance: Institutional Linwood Waterman Master Pro Forma."
+    return report
+
+
+def render_unit_mix_table(unit_mix):
+    rows = "".join([
+        f"<tr>"
+        f"<td style='font-weight: 700; color: #ffffff;'>{u.name}</td>"
+        f"<td style='text-align: right;'>{u.unit_count}</td>"
+        f"<td style='text-align: right;'>{u.avg_sf:,.0f}</td>"
+        f"<td style='text-align: right; color: #34d399; font-weight: 700;'>${u.in_place_rent:,.2f}</td>"
+        f"<td style='text-align: right; color: #cbd5e1;'>${u.market_rent:,.2f}</td>"
+        f"<td style='text-align: right; color: #94a3b8;'>${u.reno_capex_per_unit:,.0f}</td>"
+        f"</tr>"
+        for u in unit_mix
+    ])
+    html = (
+        f"<div class='glass-card'>"
+        f"<div style='display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;'>"
+        f"<h4 style='font-size: 0.88rem; font-weight: 700; color: #ffffff; margin: 0; display: flex; align-items: center; gap: 0.4rem;'>"
+        f"<span style='color: #34d399;'>⊞</span> Normalized Unit Mix</h4>"
+        f"<span style='font-size: 0.72rem; color: #94a3b8;'>From Rent Roll &amp; OM</span></div>"
+        f"<div style='overflow-x: auto;'>"
+        f"<table class='lux-table'><thead><tr>"
+        f"<th>Tier</th><th style='text-align: right;'>Units</th><th style='text-align: right;'>Avg SF</th>"
+        f"<th style='text-align: right;'>In-Place</th><th style='text-align: right;'>Market</th><th style='text-align: right;'>Capex</th>"
+        f"</tr></thead><tbody>{rows}</tbody></table></div></div>"
+    )
+    st.markdown(html, unsafe_allow_html=True)
+
+
+def render_t12_expenses_table(exp, total_units, units_ct):
+    items = [
+        ("Payroll & Personnel", "Direct On-Site", exp.payroll, exp.payroll * total_units),
+        ("Utilities (Water/Gas/Elec)", "Actual Historical", exp.utilities, exp.utilities * total_units),
+        ("Repairs & Maintenance", "Operating Supplies", exp.repairs_maint, exp.repairs_maint * total_units),
+        ("Turnover & Redecoration", "Unit Make-Ready", exp.turnover, exp.turnover * total_units),
+        ("Marketing & Advertising", "Digital / Resident", exp.marketing, exp.marketing * total_units),
+        ("General & Administrative", "Software / Legal", exp.general_admin, exp.general_admin * total_units),
+        ("Insurance (P&C / Liability)", "Underwritten Policy", exp.insurance, exp.insurance * total_units),
+        ("Real Estate Taxes", "County Assessment", exp.real_estate_taxes / units_ct, exp.real_estate_taxes),
+    ]
+    rows = "".join([
+        f"<tr>"
+        f"<td style='font-weight: 700; color: #ffffff;'>{cat}</td>"
+        f"<td style='color: #cbd5e1; font-size: 0.72rem;'>{alloc}</td>"
+        f"<td style='text-align: right; color: #cbd5e1;'>${per_u:,.0f}</td>"
+        f"<td style='text-align: right; color: #34d399; font-weight: 700;'>${total:,.0f}</td>"
+        f"</tr>"
+        for cat, alloc, per_u, total in items
+    ])
+    html = (
+        f"<div class='glass-card'>"
+        f"<div style='display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;'>"
+        f"<h4 style='font-size: 0.88rem; font-weight: 700; color: #ffffff; margin: 0; display: flex; align-items: center; gap: 0.4rem;'>"
+        f"<span style='color: #10b981;'>📋</span> T-12 Operating Expenses (Standard COA)</h4>"
+        f"<span style='font-size: 0.72rem; color: #94a3b8;'>From Accounting P&amp;L</span></div>"
+        f"<div style='overflow-x: auto;'>"
+        f"<table class='lux-table'><thead><tr>"
+        f"<th>Expense Category</th><th>Allocation</th><th style='text-align: right;'>$/Unit/Yr</th><th style='text-align: right;'>Annual Total</th>"
+        f"</tr></thead><tbody>{rows}</tbody></table></div></div>"
+    )
+    st.markdown(html, unsafe_allow_html=True)
 
 # Initialize default demo deal if session state is empty
 if 'deals_history' not in st.session_state:
@@ -792,39 +834,13 @@ else:
             # 4 KPI Cards (1:1 with static/index.html)
             k1, k2, k3, k4 = st.columns(4)
             with k1:
-                st.markdown(f"""
-                <div class="kpi-card">
-                    <div class="kpi-title">Purchase Price</div>
-                    <div class="kpi-val">${deal.purchase_price:,.0f}</div>
-                    <div class="kpi-sub">${price_per_u:,.0f} / unit</div>
-                </div>
-                """, unsafe_allow_html=True)
+                st.markdown(f"<div class='kpi-card'><div class='kpi-title'>Purchase Price</div><div class='kpi-val'>${deal.purchase_price:,.0f}</div><div class='kpi-sub'>${price_per_u:,.0f} / unit</div></div>", unsafe_allow_html=True)
             with k2:
-                st.markdown(f"""
-                <div class="kpi-card">
-                    <div class="kpi-title">Total Units & Size</div>
-                    <div class="kpi-val">{deal.total_units} Units</div>
-                    <div class="kpi-sub">{deal.total_rsf:,.0f} RSF</div>
-                </div>
-                """, unsafe_allow_html=True)
+                st.markdown(f"<div class='kpi-card'><div class='kpi-title'>Total Units & Size</div><div class='kpi-val'>{deal.total_units} Units</div><div class='kpi-sub'>{deal.total_rsf:,.0f} RSF</div></div>", unsafe_allow_html=True)
             with k3:
-                st.markdown(f"""
-                <div class="kpi-card">
-                    <div class="kpi-title">T-12 Operating Expenses</div>
-                    <div class="kpi-val" style="color: #34d399;">${total_opex:,.0f}</div>
-                    <div class="kpi-sub">${unit_opex:,.0f} / unit / yr</div>
-                </div>
-                """, unsafe_allow_html=True)
+                st.markdown(f"<div class='kpi-card'><div class='kpi-title'>T-12 Operating Expenses</div><div class='kpi-val' style='color: #34d399;'>${total_opex:,.0f}</div><div class='kpi-sub'>${unit_opex:,.0f} / unit / yr</div></div>", unsafe_allow_html=True)
             with k4:
-                st.markdown(f"""
-                <div class="kpi-card">
-                    <div class="kpi-title">Model Integrity</div>
-                    <div class="kpi-val" style="color: #34d399; display: flex; align-items: center; gap: 0.35rem;">
-                        <span>✓</span> 100% Valid
-                    </div>
-                    <div class="kpi-sub">104,720 formulas live</div>
-                </div>
-                """, unsafe_allow_html=True)
+                st.markdown(f"<div class='kpi-card'><div class='kpi-title'>Model Integrity</div><div class='kpi-val' style='color: #34d399; display: flex; align-items: center; gap: 0.35rem;'><span>✓</span> 100% Valid</div><div class='kpi-sub'>104,720 formulas live</div></div>", unsafe_allow_html=True)
 
             st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
 
@@ -832,92 +848,10 @@ else:
             t_col1, t_col2 = st.columns(2)
             
             with t_col1:
-                um_rows_html = ""
-                for u in deal.unit_mix:
-                    um_rows_html += f"""
-                    <tr>
-                        <td style="font-weight: 700; color: #ffffff;">{u.name}</td>
-                        <td style="text-align: right;">{u.unit_count}</td>
-                        <td style="text-align: right;">{u.avg_sf:,.0f}</td>
-                        <td style="text-align: right; color: #34d399; font-weight: 700;">${u.in_place_rent:,.2f}</td>
-                        <td style="text-align: right; color: #cbd5e1;">${u.market_rent:,.2f}</td>
-                        <td style="text-align: right; color: #94a3b8;">${u.reno_capex_per_unit:,.0f}</td>
-                    </tr>
-                    """
-                st.markdown(f"""
-                <div class="glass-card">
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
-                        <h4 style="font-size: 0.88rem; font-weight: 700; color: #ffffff; margin: 0; display: flex; align-items: center; gap: 0.4rem;">
-                            <span style="color: #34d399;">⊞</span> Normalized Unit Mix
-                        </h4>
-                        <span style="font-size: 0.72rem; color: #94a3b8;">From Rent Roll & OM</span>
-                    </div>
-                    <div style="overflow-x: auto;">
-                        <table class="lux-table">
-                            <thead>
-                                <tr>
-                                    <th>Tier</th>
-                                    <th style="text-align: right;">Units</th>
-                                    <th style="text-align: right;">Avg SF</th>
-                                    <th style="text-align: right;">In-Place</th>
-                                    <th style="text-align: right;">Market</th>
-                                    <th style="text-align: right;">Capex</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {um_rows_html}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
+                render_unit_mix_table(deal.unit_mix)
 
             with t_col2:
-                t12_items = [
-                    ("Payroll & Personnel", "Direct On-Site", exp.payroll, exp.payroll * deal.total_units),
-                    ("Utilities (Water/Gas/Elec)", "Actual Historical", exp.utilities, exp.utilities * deal.total_units),
-                    ("Repairs & Maintenance", "Operating Supplies", exp.repairs_maint, exp.repairs_maint * deal.total_units),
-                    ("Turnover & Redecoration", "Unit Make-Ready", exp.turnover, exp.turnover * deal.total_units),
-                    ("Marketing & Advertising", "Digital / Resident", exp.marketing, exp.marketing * deal.total_units),
-                    ("General & Administrative", "Software / Legal", exp.general_admin, exp.general_admin * deal.total_units),
-                    ("Insurance (P&C / Liability)", "Underwritten Policy", exp.insurance, exp.insurance * deal.total_units),
-                    ("Real Estate Taxes", "County Assessment", exp.real_estate_taxes / units_ct, exp.real_estate_taxes),
-                ]
-                t12_rows_html = ""
-                for cat, alloc, per_u, total in t12_items:
-                    t12_rows_html += f"""
-                    <tr>
-                        <td style="font-weight: 700; color: #ffffff;">{cat}</td>
-                        <td style="color: #cbd5e1; font-size: 0.72rem;">{alloc}</td>
-                        <td style="text-align: right; color: #cbd5e1;">${per_u:,.0f}</td>
-                        <td style="text-align: right; color: #34d399; font-weight: 700;">${total:,.0f}</td>
-                    </tr>
-                    """
-                st.markdown(f"""
-                <div class="glass-card">
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
-                        <h4 style="font-size: 0.88rem; font-weight: 700; color: #ffffff; margin: 0; display: flex; align-items: center; gap: 0.4rem;">
-                            <span style="color: #10b981;">📋</span> T-12 Operating Expenses (Standard COA)
-                        </h4>
-                        <span style="font-size: 0.72rem; color: #94a3b8;">From Accounting P&L</span>
-                    </div>
-                    <div style="overflow-x: auto;">
-                        <table class="lux-table">
-                            <thead>
-                                <tr>
-                                    <th>Expense Category</th>
-                                    <th>Allocation</th>
-                                    <th style="text-align: right;">$/Unit/Yr</th>
-                                    <th style="text-align: right;">Annual Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {t12_rows_html}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
+                render_t12_expenses_table(exp, deal.total_units, units_ct)
 
             st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
             with st.expander("🔍 View Full Lineage & Mathematical Provenance Audit Trail"):
