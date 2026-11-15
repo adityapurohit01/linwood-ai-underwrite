@@ -122,6 +122,7 @@ def render_t12_expenses_table(exp, total_units, units_ct):
         ("Utilities (Water/Gas/Elec)", "Actual Historical", exp.utilities, exp.utilities * total_units),
         ("Repairs & Maintenance", "Operating Supplies", exp.repairs_maint, exp.repairs_maint * total_units),
         ("Turnover & Redecoration", "Unit Make-Ready", exp.turnover, exp.turnover * total_units),
+        ("Contract Services", "Landscaping / Pest", getattr(exp, 'contract_services', 0.0), getattr(exp, 'contract_services', 0.0) * total_units),
         ("Marketing & Advertising", "Digital / Resident", exp.marketing, exp.marketing * total_units),
         ("General & Administrative", "Software / Legal", exp.general_admin, exp.general_admin * total_units),
         ("Insurance (P&C / Liability)", "Underwritten Policy", exp.insurance, exp.insurance * total_units),
@@ -146,6 +147,49 @@ def render_t12_expenses_table(exp, total_units, units_ct):
         f"<table class='lux-table'><thead><tr>"
         f"<th>Expense Category</th><th>Allocation</th><th style='text-align: right;'>$/Unit/Yr</th><th style='text-align: right;'>Annual Total</th>"
         f"</tr></thead><tbody>{rows}</tbody></table></div></div>"
+    )
+    st.markdown(html, unsafe_allow_html=True)
+
+
+def render_monthly_t12_table(exp):
+    months = ["M1", "M2", "M3", "M4", "M5", "M6", "M7", "M8", "M9", "M10", "M11", "M12"]
+    
+    rows_data = [
+        ("Payroll & Personnel", getattr(exp, 'monthly_payroll', [])),
+        ("Utilities (Water/Gas/Elec)", getattr(exp, 'monthly_utilities', [])),
+        ("Repairs & Maintenance", getattr(exp, 'monthly_repairs_maint', [])),
+        ("Turnover & Redecoration", getattr(exp, 'monthly_turnover', [])),
+        ("Contract Services", getattr(exp, 'monthly_contract_services', [])),
+        ("Marketing & Advertising", getattr(exp, 'monthly_marketing', [])),
+        ("General & Administrative", getattr(exp, 'monthly_general_admin', [])),
+        ("Insurance (P&C / Liability)", getattr(exp, 'monthly_insurance', [])),
+        ("Real Estate Taxes", getattr(exp, 'monthly_real_estate_taxes', [])),
+    ]
+    
+    thead = "".join([f"<th style='text-align: right;'>{m}</th>" for m in months])
+    tbody = ""
+    for name, arr in rows_data:
+        m_arr = arr if len(arr) == 12 else [0.0] * 12
+        tot = sum(m_arr)
+        tds = "".join([f"<td style='text-align: right; color: #cbd5e1;'>${v:,.0f}</td>" for v in m_arr])
+        tbody += (
+            f"<tr>"
+            f"<td style='font-weight: 700; color: #ffffff;'>{name}</td>"
+            f"{tds}"
+            f"<td style='text-align: right; color: #34d399; font-weight: 700;'>${tot:,.0f}</td>"
+            f"</tr>"
+        )
+        
+    html = (
+        f"<div class='glass-card' style='margin-top: 0.5rem;'>"
+        f"<div style='display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;'>"
+        f"<h4 style='font-size: 0.88rem; font-weight: 700; color: #ffffff; margin: 0; display: flex; align-items: center; gap: 0.4rem;'>"
+        f"<span style='color: #38bdf8;'>📈</span> Trailing 12-Month Operating Cash Flows</h4>"
+        f"<span style='font-size: 0.72rem; color: #94a3b8;'>Injected into 'Trailing 12' (Sheet 4)</span></div>"
+        f"<div style='overflow-x: auto;'>"
+        f"<table class='lux-table'><thead><tr>"
+        f"<th>Category</th>{thead}<th style='text-align: right;'>Total $/Yr</th>"
+        f"</tr></thead><tbody>{tbody}</tbody></table></div></div>"
     )
     st.markdown(html, unsafe_allow_html=True)
 
@@ -661,6 +705,19 @@ with st.form("custom_upload_form", clear_on_submit=False):
     prop_price = c2.number_input("Target Purchase Price ($)", min_value=100000.0, value=25000000.0, step=250000.0, format="%.2f")
     
     st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
+
+    from underwriting.gemini_client import get_api_key
+    if not get_api_key():
+        st.markdown("""
+        <div style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.35); padding: 0.65rem 1rem; border-radius: 10px; margin-bottom: 0.85rem;">
+            <p style="font-size: 0.85rem; color: #fbbf24; margin: 0; font-weight: 600;">
+                🔑 Enter Gemini API Key to activate the Multi-Agent Intelligence Engine:
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+        key_in = st.text_input("Gemini API Key", type="password", placeholder="AQ.Ab8...", key="gemini_key_input")
+        if key_in:
+            st.session_state["gemini_api_key"] = key_in.strip()
     f1, f2, f3 = st.columns(3)
     
     with f1:
@@ -711,8 +768,7 @@ st.markdown("</div>", unsafe_allow_html=True)
 # PIPELINE EXECUTION LOGIC
 # ==============================================================================
 if start_underwrite_btn:
-    with st.status("⚡ Ingesting Data Room & Processing Pro Forma...", expanded=True) as status_box:
-        st.write("🔍 **[1/4]** Ingesting documents & extracting lease tiers from rent roll...")
+    with st.status("🧠 Multi-Agent Autonomous Underwriting in Progress...", expanded=True) as status_box:
         session_id = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         upload_session_dir = os.path.join(UPLOADS_DIR, f"session_{session_id}")
         os.makedirs(upload_session_dir, exist_ok=True)
@@ -726,17 +782,20 @@ if start_underwrite_btn:
         if om_file:
             with open(os.path.join(upload_session_dir, om_file.name), "wb") as f:
                 f.write(om_file.getbuffer())
-                
-        st.write("📊 **[2/4]** Standardizing Operating Expenses to Linwood Chart of Accounts...")
+
+        st.write("🤖 **Agent 1 (Rent Roll Specialist):** Ingesting leases, identifying floorplans, unit counts & contract rents...")
+        st.write("📊 **Agent 2 (T-12 Financial Analyst):** Standardizing Chart of Accounts (COA) & computing 12-month trailing actuals...")
+        st.write("📑 **Agent 3 (OM Intelligence):** Extracting property metadata, vintage & pricing assumptions...")
+        st.write("⚖️ **Agent 4 (Deal Synthesis & QC):** Cross-reconciling unit mix, financial statements, and audit lineage...")
+
         deal_data = parse_generic_dataroom(upload_session_dir, default_name=prop_name, default_price=prop_price)
         
-        st.write("📑 **[3/4]** Preserving 104,720 formulas & injecting into Waterman master template...")
+        st.write("⚡ **Excel Injection Engine:** Injecting Inputs (Sheet 3) & Trailing 12 (Sheet 4) — 104,720 formulas preserved.")
         safe_name = "".join(c for c in prop_name if c.isalnum() or c in (" ", "_")).strip().replace(" ", "_")
         out_file = os.path.join(OUTPUT_DIR, f"Waterman_{safe_name}_{session_id}.xlsx")
         inject_waterman_model(TEMPLATE_PATH, deal_data, out_file)
         
-        st.write("✅ **[4/4]** Mathematical audit complete: 100% formulas intact.")
-        status_box.update(label="✨ Underwriting Complete! Model Ready for Download.", state="complete", expanded=False)
+        status_box.update(label="✨ Multi-Agent Underwriting Complete! Model Ready for Download.", state="complete", expanded=False)
         
         st.session_state['deals_history'].insert(0, {
             "id": session_id,
@@ -829,7 +888,7 @@ else:
                     st.session_state['deals_history'] = [d for d in st.session_state['deals_history'] if d['id'] != deal_id]
                     st.rerun()
 
-            st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
+            st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
 
             # 4 KPI Cards (1:1 with static/index.html)
             k1, k2, k3, k4 = st.columns(4)
@@ -852,6 +911,10 @@ else:
 
             with t_col2:
                 render_t12_expenses_table(exp, deal.total_units, units_ct)
+
+            if getattr(exp, 'monthly_payroll', None) and any(v > 0 for v in exp.monthly_payroll):
+                with st.expander("📈 View Trailing 12-Month Operating Cash Flows (Month 1 to Month 12)", expanded=False):
+                    render_monthly_t12_table(exp)
 
             st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
             with st.expander("🔍 View Full Lineage & Mathematical Provenance Audit Trail"):

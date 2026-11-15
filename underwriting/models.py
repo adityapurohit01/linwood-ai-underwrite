@@ -25,17 +25,37 @@ class UnitMixItem:
 
 @dataclass
 class T12Expenses:
-    """Standardized commercial real estate Chart of Accounts (COA) per unit/year."""
-    payroll: float                   # Personnel, leasing, maintenance staff ($/unit/yr)
-    utilities: float                 # Water, sewer, gas, electric, waste ($/unit/yr)
-    repairs_maint: float             # Routine & recurring maintenance ($/unit/yr)
-    turnover: float                  # Unit turns, painting, carpet clean ($/unit/yr)
-    marketing: float                 # Advertising, locator fees, signage ($/unit/yr)
-    general_admin: float             # Software, telecom, legal, bank fees ($/unit/yr)
-    insurance: float                 # Property, casualty, general liability ($/unit/yr)
-    real_estate_taxes: float         # Annual real estate property taxes ($/yr total)
+    """Standardized commercial real estate Chart of Accounts (COA) per unit/year and 12-month trailing actuals."""
+    payroll: float                     # Personnel, leasing, maintenance staff ($/unit/yr)
+    utilities: float                   # Water, sewer, gas, electric, waste ($/unit/yr)
+    repairs_maint: float               # Routine & recurring maintenance ($/unit/yr)
+    turnover: float                    # Unit turns, painting, carpet clean ($/unit/yr)
+    marketing: float                   # Advertising, locator fees, signage ($/unit/yr)
+    general_admin: float               # Software, telecom, legal, bank fees ($/unit/yr)
+    insurance: float                   # Property, casualty, general liability ($/unit/yr)
+    real_estate_taxes: float           # Annual real estate property taxes ($/yr total)
+    contract_services: float = 0.0     # Landscaping, pest control, security, elevators ($/unit/yr)
     management_fee_pct: float = 0.0275 # % of Effective Gross Income (EGI)
     replacement_reserve: float = 15.0  # Capex reserve buffer ($/unit/month)
+    
+    # 12-Month Arrays for direct Trailing 12 (sheet4.xml) injection
+    monthly_payroll: List[float] = field(default_factory=list)
+    monthly_utilities: List[float] = field(default_factory=list)
+    monthly_repairs_maint: List[float] = field(default_factory=list)
+    monthly_turnover: List[float] = field(default_factory=list)
+    monthly_contract_services: List[float] = field(default_factory=list)
+    monthly_marketing: List[float] = field(default_factory=list)
+    monthly_general_admin: List[float] = field(default_factory=list)
+    monthly_insurance: List[float] = field(default_factory=list)
+    monthly_real_estate_taxes: List[float] = field(default_factory=list)
+    
+    # Revenue monthly arrays
+    monthly_market_rent: List[float] = field(default_factory=list)
+    monthly_loss_to_lease: List[float] = field(default_factory=list)
+    monthly_vacancy: List[float] = field(default_factory=list)
+    monthly_concessions: List[float] = field(default_factory=list)
+    monthly_bad_debt: List[float] = field(default_factory=list)
+    monthly_other_income: List[float] = field(default_factory=list)
 
     def to_dict(self) -> Dict:
         return asdict(self)
@@ -78,4 +98,3 @@ class DealUnderwriting:
 
     def to_dict(self) -> Dict:
         return asdict(self)
-
