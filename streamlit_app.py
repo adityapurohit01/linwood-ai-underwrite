@@ -68,31 +68,37 @@ if mode == "Verified Data Rooms (1-Click)":
     
     with col1:
         st.markdown("### Miars Farm Apartments")
-        st.write("116 Units • Chesapeake, VA • \$16.85M Valuation")
+        st.write("116 Units • Chesapeake, VA • $16.85M Valuation")
         st.caption("Files: Berkadia OM, RedIQ Rent Roll, Franklin Group T-12")
         if st.button("🚀 Underwrite Miars Farm", use_container_width=True, type="primary"):
-            with st.spinner("Parsing data room and injecting into Waterman pro forma..."):
-                data_dir = os.path.join(DATAROOMS_DIR, "Miars Farm")
-                deal_obj = parse_miars_farm(data_dir)
-                out_path = os.path.join(OUTPUT_DIR, "Waterman_Miars_Farm_FILLED.xlsx")
-                inject_waterman_model(TEMPLATE_PATH, deal_obj, out_path)
-                output_excel_path = out_path
-                st.session_state['current_deal'] = deal_obj
-                st.session_state['excel_path'] = out_path
+            data_dir = os.path.join(DATAROOMS_DIR, "Miars Farm")
+            if not os.path.exists(data_dir):
+                st.info("💡 Sample data room folder was cleaned up. Switch to 'Upload Custom Files' mode to underwrite your live files!")
+            else:
+                with st.spinner("Parsing data room and injecting into Waterman pro forma..."):
+                    deal_obj = parse_miars_farm(data_dir)
+                    out_path = os.path.join(OUTPUT_DIR, "Waterman_Miars_Farm_FILLED.xlsx")
+                    inject_waterman_model(TEMPLATE_PATH, deal_obj, out_path)
+                    output_excel_path = out_path
+                    st.session_state['current_deal'] = deal_obj
+                    st.session_state['excel_path'] = out_path
                 
     with col2:
         st.markdown("### ARIUM Lenox Park")
-        st.write("375 Units • Brookhaven, GA • \$84.0M Valuation")
+        st.write("375 Units • Brookhaven, GA • $84.0M Valuation")
         st.caption("Files: 58-page CBRE OM, Stonemark Rent Roll XLS, Fulton County Tax Bill")
         if st.button("🏢 Underwrite ARIUM Lenox Park", use_container_width=True):
-            with st.spinner("Parsing 375-unit complex rent roll and tax bill..."):
-                data_dir = os.path.join(DATAROOMS_DIR, "ARIUM Lenox Park")
-                deal_obj = parse_arium_lenox_park(data_dir)
-                out_path = os.path.join(OUTPUT_DIR, "Waterman_ARIUM_Lenox_Park_FILLED.xlsx")
-                inject_waterman_model(TEMPLATE_PATH, deal_obj, out_path)
-                output_excel_path = out_path
-                st.session_state['current_deal'] = deal_obj
-                st.session_state['excel_path'] = out_path
+            data_dir = os.path.join(DATAROOMS_DIR, "ARIUM Lenox Park")
+            if not os.path.exists(data_dir):
+                st.info("💡 Sample data room folder was cleaned up. Switch to 'Upload Custom Files' mode to underwrite your live files!")
+            else:
+                with st.spinner("Parsing 375-unit complex rent roll and tax bill..."):
+                    deal_obj = parse_arium_lenox_park(data_dir)
+                    out_path = os.path.join(OUTPUT_DIR, "Waterman_ARIUM_Lenox_Park_FILLED.xlsx")
+                    inject_waterman_model(TEMPLATE_PATH, deal_obj, out_path)
+                    output_excel_path = out_path
+                    st.session_state['current_deal'] = deal_obj
+                    st.session_state['excel_path'] = out_path
 
 else:
     st.subheader("📤 Upload Custom Deal Data Room")
