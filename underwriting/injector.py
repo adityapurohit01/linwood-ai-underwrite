@@ -65,14 +65,45 @@ def inject_waterman_model(
     s3_mod = set_num(s3_mod, 'M26', getattr(deal, 'equity_placement_fee', round(deal.purchase_price * 0.02, 2)))
     s3_mod = set_num(s3_mod, 'M27', getattr(deal, 'working_capital', round(max(250000.0, deal.total_units * 1500.0), 2)))
 
-    # Pre-indexed shared strings in Waterman template: 1BR=661, 2BR=662, 3BR=663
-    tier_str_map = {'studio': 661, '1br': 661, '2br': 662, '3br': 663, '4br': 663}
+    # Dynamic shared strings for arbitrary custom tier names (Studio, 1BR, 2BR, 3BR, 4BR, Townhome, etc.)
+    tier_str_map = {'1br': 661, '2br': 662, '3br': 663}
+    if 'xl/sharedStrings.xml' in files:
+        import xml.etree.ElementTree as ET
+        ET.register_namespace('', 'http://schemas.openxmlformats.org/spreadsheetml/2006/main')
+        root = ET.fromstring(files['xl/sharedStrings.xml'])
+        ns = {'ns': 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}
+        existing_strings = {}
+        for i, si in enumerate(root.findall('ns:si', ns)):
+            txt = ''.join(si.itertext()).strip().lower()
+            if txt not in existing_strings:
+                existing_strings[txt] = i
+        
+        new_count = 0
+        curr_len = len(root.findall('ns:si', ns))
+        for item in deal.unit_mix:
+            key = item.name.strip().lower()
+            if key not in existing_strings:
+                existing_strings[key] = curr_len
+                curr_len += 1
+                new_count += 1
+                si_new = ET.SubElement(root, '{http://schemas.openxmlformats.org/spreadsheetml/2006/main}si')
+                t_new = ET.SubElement(si_new, '{http://schemas.openxmlformats.org/spreadsheetml/2006/main}t')
+                t_new.text = item.name.strip()
+
+        if new_count > 0:
+            c = int(root.get('count', '0')) + new_count
+            u = int(root.get('uniqueCount', '0')) + new_count
+            root.set('count', str(c))
+            root.set('uniqueCount', str(u))
+            files['xl/sharedStrings.xml'] = b'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\r\n' + ET.tostring(root, encoding='utf-8')
+        tier_str_map.update(existing_strings)
+
     start_row = 47
 
     # Inject Unit Mix Tiers
     for i, item in enumerate(deal.unit_mix):
         r = start_row + i
-        tier_key = ''.join(c for c in item.name.lower() if c.isalnum())
+        tier_key = item.name.strip().lower()
         s_idx = tier_str_map.get(tier_key, 661)
 
         s3_mod = set_shared_str(s3_mod, f'B{r}', s_idx)

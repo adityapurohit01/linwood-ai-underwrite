@@ -75,7 +75,10 @@ def identify_file_roles(files: List[str], data_dir: str) -> Dict[str, Optional[s
 def parse_generic_dataroom(
     data_dir: str,
     default_name: Optional[str] = None,
-    default_price: Optional[float] = None
+    default_price: Optional[float] = None,
+    rr_file_path: Optional[str] = None,
+    t12_file_path: Optional[str] = None,
+    om_file_path: Optional[str] = None
 ) -> DealUnderwriting:
     """
     Intelligently parses ANY custom due diligence data room using the Multi-Agent AI system.
@@ -84,6 +87,14 @@ def parse_generic_dataroom(
     """
     files = os.listdir(data_dir) if os.path.exists(data_dir) else []
     roles = identify_file_roles(files, data_dir)
+    
+    if rr_file_path and os.path.exists(rr_file_path):
+        roles['rent_roll'] = rr_file_path
+    if t12_file_path and os.path.exists(t12_file_path):
+        roles['t12'] = t12_file_path
+    if om_file_path and os.path.exists(om_file_path):
+        roles['om'] = om_file_path
+
     lineage = {}
 
     # Agent 1: Parse Rent Roll

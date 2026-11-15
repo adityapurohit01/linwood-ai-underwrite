@@ -773,14 +773,21 @@ if start_underwrite_btn:
         upload_session_dir = os.path.join(UPLOADS_DIR, f"session_{session_id}")
         os.makedirs(upload_session_dir, exist_ok=True)
         
+        rr_saved_path = None
+        t12_saved_path = None
+        om_saved_path = None
+
         if rr_file:
-            with open(os.path.join(upload_session_dir, rr_file.name), "wb") as f:
+            rr_saved_path = os.path.join(upload_session_dir, rr_file.name)
+            with open(rr_saved_path, "wb") as f:
                 f.write(rr_file.getbuffer())
         if t12_file:
-            with open(os.path.join(upload_session_dir, t12_file.name), "wb") as f:
+            t12_saved_path = os.path.join(upload_session_dir, t12_file.name)
+            with open(t12_saved_path, "wb") as f:
                 f.write(t12_file.getbuffer())
         if om_file:
-            with open(os.path.join(upload_session_dir, om_file.name), "wb") as f:
+            om_saved_path = os.path.join(upload_session_dir, om_file.name)
+            with open(om_saved_path, "wb") as f:
                 f.write(om_file.getbuffer())
 
         st.write("🤖 **Agent 1 (Rent Roll Specialist):** Ingesting leases, identifying floorplans, unit counts & contract rents...")
@@ -788,7 +795,14 @@ if start_underwrite_btn:
         st.write("📑 **Agent 3 (OM Intelligence):** Extracting property metadata, vintage & pricing assumptions...")
         st.write("⚖️ **Agent 4 (Deal Synthesis & QC):** Cross-reconciling unit mix, financial statements, and audit lineage...")
 
-        deal_data = parse_generic_dataroom(upload_session_dir, default_name=prop_name, default_price=prop_price)
+        deal_data = parse_generic_dataroom(
+            upload_session_dir,
+            default_name=prop_name,
+            default_price=prop_price,
+            rr_file_path=rr_saved_path,
+            t12_file_path=t12_saved_path,
+            om_file_path=om_saved_path
+        )
         
         st.write("⚡ **Excel Injection Engine:** Injecting Inputs (Sheet 3) & Trailing 12 (Sheet 4) — 104,720 formulas preserved.")
         safe_name = "".join(c for c in prop_name if c.isalnum() or c in (" ", "_")).strip().replace(" ", "_")

@@ -30,7 +30,7 @@ class RentRollAgent:
         self.file_path = file_path
 
     def _read_all_rows(self) -> List[List[Any]]:
-        """Extracts rows from Excel or CSV."""
+        """Extracts rows from Excel (xlsx/xls), CSV, or PDF rent rolls."""
         rows = []
         if self.file_path.endswith('.csv'):
             with open(self.file_path, 'r', encoding='utf-8', errors='ignore') as f:
@@ -38,28 +38,63 @@ class RentRollAgent:
                 rows = [r for r in reader if any(r)]
         elif self.file_path.endswith('.xls'):
             wb = xlrd.open_workbook(self.file_path)
-            best_sheet = wb.sheet_by_index(0)
-            max_r = best_sheet.nrows
+            sheet_scores = []
             for idx in range(wb.nsheets):
                 s = wb.sheet_by_index(idx)
-                if s.nrows > max_r:
-                    best_sheet = s
-                    max_r = s.nrows
+                sname_lower = s.name.lower()
+                bonus = 1.0
+                if any(k in sname_lower for k in ['rent roll', 'rent_roll', 'rentroll', 'unit detail', 'lease detail']):
+                    bonus = 10.0
+                elif any(k in sname_lower for k in ['rent', 'roll', 'unit', 'lease', 'tenant', 'schedule']):
+                    bonus = 3.0
+                elif any(k in sname_lower for k in ['cover', 'disclaimer', 'about', 'summary']):
+                    bonus = 0.05
+                sheet_scores.append((s.nrows * bonus, s))
+            sheet_scores.sort(key=lambda x: x[0], reverse=True)
+            best_sheet = sheet_scores[0][1] if sheet_scores else wb.sheet_by_index(0)
             for r in range(best_sheet.nrows):
                 row_vals = [best_sheet.cell_value(r, c) for c in range(best_sheet.ncols)]
                 if any(str(v).strip() for v in row_vals):
                     rows.append(row_vals)
         elif self.file_path.endswith('.xlsx'):
             wb = openpyxl.load_workbook(self.file_path, data_only=True)
-            target_ws = wb.active
+            sheet_scores = []
             for sname in wb.sheetnames:
-                if any(k in sname.lower() for k in ['rent', 'roll', 'unit', 'lease', 'report']):
-                    target_ws = wb[sname]
-                    break
+                ws = wb[sname]
+                sname_lower = sname.lower()
+                bonus = 1.0
+                if any(k in sname_lower for k in ['rent roll', 'rent_roll', 'rentroll', 'unit detail', 'lease detail']):
+                    bonus = 10.0
+                elif any(k in sname_lower for k in ['rent', 'roll', 'unit', 'lease', 'tenant', 'schedule']):
+                    bonus = 3.0
+                elif any(k in sname_lower for k in ['cover', 'disclaimer', 'about', 'summary']):
+                    bonus = 0.05
+                sheet_scores.append(((ws.max_row or 0) * bonus, ws))
+            sheet_scores.sort(key=lambda x: x[0], reverse=True)
+            target_ws = sheet_scores[0][1] if sheet_scores else wb.active
             for r in range(1, target_ws.max_row + 1):
                 row_vals = [target_ws.cell(r, c).value for c in range(1, target_ws.max_column + 1)]
                 if any(v is not None and str(v).strip() for v in row_vals):
                     rows.append(row_vals)
+        elif self.file_path.endswith('.pdf'):
+            try:
+                import fitz
+                doc = fitz.open(self.file_path)
+                for p_idx in range(len(doc)):
+                    page_text = doc[p_idx].get_text()
+                    for line in page_text.split('\n'):
+                        line = line.strip()
+                        if not line:
+                            continue
+                        parts = re.split(r'\s{2,}|\t', line)
+                        if len(parts) >= 3:
+                            rows.append(parts)
+                        else:
+                            parts = line.split()
+                            if len(parts) >= 3:
+                                rows.append(parts)
+            except Exception:
+                pass
         return rows
 
     def parse(self) -> Tuple[List[UnitMixItem], int, float, str]:
@@ -292,18 +327,29 @@ class T12FinancialAgent:
         self.total_units = max(1, total_units)
 
     def _read_statement_lines(self) -> List[Dict[str, Any]]:
-        """Reads rows with account codes, labels, monthly values, and totals."""
+        """Reads rows with account codes, labels, monthly values, and totals from xlsx, xls, csv, or pdf."""
         data_rows = []
         if self.file_path.endswith('.xlsx'):
             wb = openpyxl.load_workbook(self.file_path, data_only=True)
-            ws = wb.active
+            sheet_scores = []
+            for sname in wb.sheetnames:
+                ws = wb[sname]
+                sname_lower = sname.lower()
+                bonus = 1.0
+                if any(k in sname_lower for k in ['t12', 't-12', 'operating', 'p&l', 'income', 'statement', 'trailing', 'financial']):
+                    bonus = 5.0
+                elif any(k in sname_lower for k in ['cover', 'notes', 'summary', 'about']):
+                    bonus = 0.1
+                sheet_scores.append(((ws.max_row or 0) * bonus, ws))
+            sheet_scores.sort(key=lambda x: x[0], reverse=True)
+            ws = sheet_scores[0][1] if sheet_scores else wb.active
             for r in range(1, ws.max_row + 1):
                 str_parts = []
                 numeric_vals = []
                 for c in range(1, ws.max_column + 1):
                     v = ws.cell(r, c).value
                     if v is not None:
-                        if isinstance(v, str) and not v.replace('-', '').replace('.', '').isdigit():
+                        if isinstance(v, str) and not v.replace('-', '').replace('.', '').replace(',', '').replace('$', '').isdigit():
                             str_parts.append(v.strip())
                         elif isinstance(v, (int, float)):
                             numeric_vals.append(float(v))
@@ -312,20 +358,73 @@ class T12FinancialAgent:
                     data_rows.append({"label": lbl, "nums": numeric_vals})
         elif self.file_path.endswith('.xls'):
             wb = xlrd.open_workbook(self.file_path)
-            ws = wb.sheet_by_index(0)
+            sheet_scores = []
+            for idx in range(wb.nsheets):
+                s = wb.sheet_by_index(idx)
+                sname_lower = s.name.lower()
+                bonus = 1.0
+                if any(k in sname_lower for k in ['t12', 't-12', 'operating', 'p&l', 'income', 'statement', 'trailing', 'financial']):
+                    bonus = 5.0
+                elif any(k in sname_lower for k in ['cover', 'notes', 'summary', 'about']):
+                    bonus = 0.1
+                sheet_scores.append((s.nrows * bonus, s))
+            sheet_scores.sort(key=lambda x: x[0], reverse=True)
+            ws = sheet_scores[0][1] if sheet_scores else wb.sheet_by_index(0)
             for r in range(ws.nrows):
                 str_parts = []
                 numeric_vals = []
                 for c in range(ws.ncols):
                     v = ws.cell_value(r, c)
                     if v != '':
-                        if isinstance(v, str) and not v.replace('-', '').replace('.', '').isdigit():
+                        if isinstance(v, str) and not v.replace('-', '').replace('.', '').replace(',', '').replace('$', '').isdigit():
                             str_parts.append(v.strip())
                         elif isinstance(v, (int, float)):
                             numeric_vals.append(float(v))
                 lbl = ' '.join(str_parts)
                 if lbl and numeric_vals:
                     data_rows.append({"label": lbl, "nums": numeric_vals})
+        elif self.file_path.endswith('.csv'):
+            with open(self.file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                reader = csv.reader(f)
+                for row in reader:
+                    str_parts = []
+                    numeric_vals = []
+                    for v in row:
+                        if v.strip():
+                            clean_v = v.replace('$', '').replace(',', '').replace('(', '-').replace(')', '').strip()
+                            try:
+                                num = float(clean_v)
+                                numeric_vals.append(num)
+                            except ValueError:
+                                str_parts.append(v.strip())
+                    lbl = ' '.join(str_parts)
+                    if lbl and numeric_vals:
+                        data_rows.append({"label": lbl, "nums": numeric_vals})
+        elif self.file_path.endswith('.pdf'):
+            try:
+                import fitz
+                doc = fitz.open(self.file_path)
+                for p_idx in range(len(doc)):
+                    text = doc[p_idx].get_text()
+                    for line in text.split('\n'):
+                        line = line.strip()
+                        if not line:
+                            continue
+                        tokens = line.split()
+                        str_parts = []
+                        numeric_vals = []
+                        for tok in tokens:
+                            clean_t = tok.replace('$', '').replace(',', '').replace('(', '-').replace(')', '')
+                            try:
+                                num = float(clean_t)
+                                numeric_vals.append(num)
+                            except ValueError:
+                                str_parts.append(tok)
+                        lbl = ' '.join(str_parts)
+                        if lbl and numeric_vals:
+                            data_rows.append({"label": lbl, "nums": numeric_vals})
+            except Exception:
+                pass
         return data_rows
 
     def parse(self) -> Tuple[T12Expenses, str]:
@@ -414,8 +513,13 @@ Lines and Annual Totals:
 
             # Check if 12 monthly columns are present
             if len(nums) >= 12:
-                m_vals = [abs(float(v)) for v in nums[:12]]
-                tot = abs(float(nums[12])) if len(nums) > 12 else sum(m_vals)
+                # Handle cases where Total is Column 0 and Months are 1..12 (e.g. Entrata formats)
+                if len(nums) >= 13 and abs(sum(nums[1:13]) - nums[0]) < 10:
+                    m_vals = [abs(float(v)) for v in nums[1:13]]
+                    tot = abs(float(nums[0]))
+                else:
+                    m_vals = [abs(float(v)) for v in nums[:12]]
+                    tot = abs(float(nums[12])) if len(nums) > 12 else sum(m_vals)
             else:
                 tot = abs(float(nums[-1]))
                 m_vals = [tot / 12.0] * 12
