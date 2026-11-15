@@ -82,10 +82,9 @@
       <div class="flex items-center space-x-4">
         <div class="flex items-center space-x-2 text-xs font-mono bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-800 text-slate-300">
           <span class="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
-          <span>101,684 Formulas Live</span>
+          <span>104,720 Formulas Live</span>
         </div>
-        <a href="#quick-presets" class="text-xs text-slate-300 hover:text-white transition">Quick Presets</a>
-        <a href="#custom-upload" class="text-xs text-slate-300 hover:text-white transition">Upload Data Room</a>
+        <a href="#custom-upload" class="text-xs text-brand-400 hover:text-brand-300 font-medium transition">Upload Data Room</a>
       </div>
     </div>
   </header>
@@ -108,109 +107,6 @@
         </p>
       </div>
     </div>
-
-    <!-- Section 1: Quick Presets (1-Click Run) -->
-    <section id="quick-presets" class="space-y-4">
-      <div class="flex items-center justify-between">
-        <div>
-          <h2 class="text-xl font-bold text-white flex items-center space-x-2">
-            <i data-lucide="zap" class="w-5 h-5 text-brand-400"></i>
-            <span>Verified Sample Data Rooms (1-Click Run)</span>
-          </h2>
-          <p class="text-xs text-slate-400">Instantly underwrite the test data rooms provided by Yurii</p>
-        </div>
-        <button id="btn-restore-presets" onclick="restorePresets()" class="hidden text-xs text-brand-400 hover:text-brand-300 font-medium px-3 py-1.5 rounded-lg bg-brand-500/10 border border-brand-500/20 flex items-center space-x-1.5 transition">
-          <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
-          <span>Restore Sample Cards</span>
-        </button>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Preset 1: Miars Farm -->
-        <div id="card-preset-miars" class="glass-card rounded-xl p-6 border border-slate-800 hover:border-slate-700 transition relative group">
-          <div class="flex items-start justify-between mb-4">
-            <div>
-              <div class="flex items-center space-x-2">
-                <span class="text-xs font-semibold px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">Verified Answer Key</span>
-                <span class="text-xs text-slate-400">Chesapeake, VA</span>
-              </div>
-              <h3 class="text-lg font-bold text-white mt-1">Miars Farm Apartments</h3>
-              <p class="text-xs text-slate-400 font-mono mt-0.5">116 Units • $16,850,000 Price</p>
-            </div>
-            <div class="flex items-center space-x-2">
-              <div class="w-10 h-10 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center font-bold text-xs">
-                116u
-              </div>
-              <button onclick="deletePreset('miars_farm')" class="w-10 h-10 rounded-lg bg-slate-800/80 hover:bg-rose-950/70 text-slate-400 hover:text-rose-400 flex items-center justify-center transition border border-slate-700/60 hover:border-rose-800/80" title="Delete this sample card and output files">
-                <i data-lucide="trash-2" class="w-4 h-4"></i>
-              </button>
-            </div>
-          </div>
-
-          <div class="space-y-2 text-xs text-slate-300 mb-6 bg-slate-900/60 p-3 rounded-lg border border-slate-800/80">
-            <div class="flex justify-between">
-              <span class="text-slate-400">Data Room Files:</span>
-              <span class="font-mono text-slate-200">Berkadia OM, RedIQ RR, Franklin T12</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-slate-400">Core Field Accuracy:</span>
-              <span class="font-bold text-brand-400 font-mono">14 / 14 Matches (100.0%)</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-slate-400">Formulas Intact:</span>
-              <span class="font-mono text-brand-400">101,684 live formulas</span>
-            </div>
-          </div>
-
-          <button onclick="runPreset('miars_farm')" id="btn-miars" class="w-full py-2.5 px-4 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-sm transition flex items-center justify-center space-x-2 shadow-lg shadow-brand-600/20">
-            <i data-lucide="play" class="w-4 h-4"></i>
-            <span>Underwrite Miars Farm</span>
-          </button>
-        </div>
-
-        <!-- Preset 2: ARIUM Lenox Park -->
-        <div id="card-preset-arium" class="glass-card rounded-xl p-6 border border-slate-800 hover:border-slate-700 transition relative group">
-          <div class="flex items-start justify-between mb-4">
-            <div>
-              <div class="flex items-center space-x-2">
-                <span class="text-xs font-semibold px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20">Complex Data Room</span>
-                <span class="text-xs text-slate-400">Brookhaven / Atlanta, GA</span>
-              </div>
-              <h3 class="text-lg font-bold text-white mt-1">ARIUM Lenox Park</h3>
-              <p class="text-xs text-slate-400 font-mono mt-0.5">375 Units • $84,000,000 Price</p>
-            </div>
-            <div class="flex items-center space-x-2">
-              <div class="w-10 h-10 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center font-bold text-xs">
-                375u
-              </div>
-              <button onclick="deletePreset('arium_lenox_park')" class="w-10 h-10 rounded-lg bg-slate-800/80 hover:bg-rose-950/70 text-slate-400 hover:text-rose-400 flex items-center justify-center transition border border-slate-700/60 hover:border-rose-800/80" title="Delete this sample card and output files">
-                <i data-lucide="trash-2" class="w-4 h-4"></i>
-              </button>
-            </div>
-          </div>
-
-          <div class="space-y-2 text-xs text-slate-300 mb-6 bg-slate-900/60 p-3 rounded-lg border border-slate-800/80">
-            <div class="flex justify-between">
-              <span class="text-slate-400">Data Room Files:</span>
-              <span class="font-mono text-slate-200">58p CBRE OM, Stonemark XLS, Fulton Tax Bill</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-slate-400">Unit Mix:</span>
-              <span class="font-mono text-slate-200">8 Floorplans (381,644 SF)</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-slate-400">RE Tax Extraction:</span>
-              <span class="font-bold text-brand-400 font-mono">$1,003,344.02 (County Bill)</span>
-            </div>
-          </div>
-
-          <button onclick="runPreset('arium_lenox_park')" id="btn-arium" class="w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-sm transition flex items-center justify-center space-x-2 border border-slate-700">
-            <i data-lucide="play" class="w-4 h-4"></i>
-            <span>Underwrite ARIUM Lenox Park</span>
-          </button>
-        </div>
-      </div>
-    </section>
 
     <!-- Execution Status Bar (Hidden until clicked) -->
     <div id="execution-status" class="hidden glass rounded-xl p-6 border border-brand-500/30 space-y-4">
