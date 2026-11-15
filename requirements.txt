@@ -1,0 +1,14 @@
+# Core API & Server
+fastapi>=0.110.0
+uvicorn[standard]>=0.28.0
+python-multipart>=0.0.9
+pydantic>=2.0.0
+
+# Excel & Data Ingestion
+openpyxl>=3.1.2
+pandas>=2.0.0
+xlrd>=2.0.1
+pywin32>=306
+
+# Optional Streamlit Alternative UI
+streamlit>=1.30.0

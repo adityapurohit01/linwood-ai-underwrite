@@ -1,0 +1,26 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Temporary Excel lock files
+~$*.xlsx
+~$*.xls
+
+# Local virtual environment
+.venv/
+venv/
+ENV/
+env/
+
+# Uploads & Outputs (keep directories clean)
+uploads/*
+!uploads/.gitkeep
+output/*
+!output/.gitkeep
+
+# IDE & OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

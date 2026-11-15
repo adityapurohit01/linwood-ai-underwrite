@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Linwood Capital — AI Underwriting Engine</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d',
+              900: '#14532d',
+            },
+            navy: {
+              800: '#0f172a',
+              900: '#0a0f1d',
+              950: '#05070e',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .glass {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .glass-card {
+      background: rgba(30, 41, 59, 0.5);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.5);
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(100, 116, 139, 0.5);
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body class="bg-navy-950 text-slate-100 min-h-screen font-sans antialiased selection:bg-brand-500 selection:text-white">
+
+  <!-- Top Navigation -->
+  <header class="border-b border-slate-800/80 sticky top-0 z-50 glass">
+    <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-emerald-400 flex items-center justify-center shadow-lg shadow-brand-500/20">
+          <i data-lucide="building-2" class="w-5 h-5 text-white"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="font-bold text-lg tracking-tight text-white">LINWOOD</span>
+            <span class="text-xs px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-400 border border-brand-500/20 font-medium">AI Underwriter</span>
+          </div>
+          <p class="text-xs text-slate-400">Institutional Pro Forma Pipeline</p>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-4">
+        <div class="flex items-center space-x-2 text-xs font-mono bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-800 text-slate-300">
+          <span class="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
+          <span>101,684 Formulas Live</span>
+        </div>
+        <a href="#quick-presets" class="text-xs text-slate-300 hover:text-white transition">Quick Presets</a>
+        <a href="#custom-upload" class="text-xs text-slate-300 hover:text-white transition">Upload Data Room</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-6 py-8 space-y-10">
+
+    <!-- Hero Section -->
+    <div class="relative overflow-hidden rounded-2xl glass p-8 md:p-10 border border-slate-800">
+      <div class="absolute -right-20 -top-20 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="max-w-3xl space-y-4">
+        <div class="inline-flex items-center space-x-2 text-xs font-medium text-brand-400 bg-brand-500/10 px-3 py-1 rounded-full border border-brand-500/20">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+          <span>Autonomous Deal Ingestion & Model Injection</span>
+        </div>
+        <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-white leading-tight">
+          From Raw Data Room to Ready Pro Forma in Seconds
+        </h1>
+        <p class="text-slate-400 text-sm md:text-base leading-relaxed">
+          Upload your Broker OM, Rent Roll, and T-12. The engine deterministically extracts tenant leases, standardizes the Chart of Accounts, preserves all 101,000+ formulas, and delivers a presentation-ready Waterman Acquisition Excel model.
+        </p>
+      </div>
+    </div>
+
+    <!-- Section 1: Quick Presets (1-Click Run) -->
+    <section id="quick-presets" class="space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-xl font-bold text-white flex items-center space-x-2">
+            <i data-lucide="zap" class="w-5 h-5 text-brand-400"></i>
+            <span>Verified Sample Data Rooms (1-Click Run)</span>
+          </h2>
+          <p class="text-xs text-slate-400">Instantly underwrite the test data rooms provided by Yurii</p>
+        </div>
+        <button id="btn-restore-presets" onclick="restorePresets()" class="hidden text-xs text-brand-400 hover:text-brand-300 font-medium px-3 py-1.5 rounded-lg bg-brand-500/10 border border-brand-500/20 flex items-center space-x-1.5 transition">
+          <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+          <span>Restore Sample Cards</span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Preset 1: Miars Farm -->
+        <div id="card-preset-miars" class="glass-card rounded-xl p-6 border border-slate-800 hover:border-slate-700 transition relative group">
+          <div class="flex items-start justify-between mb-4">
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="text-xs font-semibold px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">Verified Answer Key</span>
+                <span class="text-xs text-slate-400">Chesapeake, VA</span>
+              </div>
+              <h3 class="text-lg font-bold text-white mt-1">Miars Farm Apartments</h3>
+              <p class="text-xs text-slate-400 font-mono mt-0.5">116 Units • $16,850,000 Price</p>
+            </div>
+            <div class="flex items-center space-x-2">
+              <div class="w-10 h-10 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center font-bold text-xs">
+                116u
+              </div>
+              <button onclick="deletePreset('miars_farm')" class="w-10 h-10 rounded-lg bg-slate-800/80 hover:bg-rose-950/70 text-slate-400 hover:text-rose-400 flex items-center justify-center transition border border-slate-700/60 hover:border-rose-800/80" title="Delete this sample card and output files">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="space-y-2 text-xs text-slate-300 mb-6 bg-slate-900/60 p-3 rounded-lg border border-slate-800/80">
+            <div class="flex justify-between">
+              <span class="text-slate-400">Data Room Files:</span>
+              <span class="font-mono text-slate-200">Berkadia OM, RedIQ RR, Franklin T12</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">Core Field Accuracy:</span>
+              <span class="font-bold text-brand-400 font-mono">14 / 14 Matches (100.0%)</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">Formulas Intact:</span>
+              <span class="font-mono text-brand-400">101,684 live formulas</span>
+            </div>
+          </div>
+
+          <button onclick="runPreset('miars_farm')" id="btn-miars" class="w-full py-2.5 px-4 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-sm transition flex items-center justify-center space-x-2 shadow-lg shadow-brand-600/20">
+            <i data-lucide="play" class="w-4 h-4"></i>
+            <span>Underwrite Miars Farm</span>
+          </button>
+        </div>
+
+        <!-- Preset 2: ARIUM Lenox Park -->
+        <div id="card-preset-arium" class="glass-card rounded-xl p-6 border border-slate-800 hover:border-slate-700 transition relative group">
+          <div class="flex items-start justify-between mb-4">
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="text-xs font-semibold px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20">Complex Data Room</span>
+                <span class="text-xs text-slate-400">Brookhaven / Atlanta, GA</span>
+              </div>
+              <h3 class="text-lg font-bold text-white mt-1">ARIUM Lenox Park</h3>
+              <p class="text-xs text-slate-400 font-mono mt-0.5">375 Units • $84,000,000 Price</p>
+            </div>
+            <div class="flex items-center space-x-2">
+              <div class="w-10 h-10 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center font-bold text-xs">
+                375u
+              </div>
+              <button onclick="deletePreset('arium_lenox_park')" class="w-10 h-10 rounded-lg bg-slate-800/80 hover:bg-rose-950/70 text-slate-400 hover:text-rose-400 flex items-center justify-center transition border border-slate-700/60 hover:border-rose-800/80" title="Delete this sample card and output files">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="space-y-2 text-xs text-slate-300 mb-6 bg-slate-900/60 p-3 rounded-lg border border-slate-800/80">
+            <div class="flex justify-between">
+              <span class="text-slate-400">Data Room Files:</span>
+              <span class="font-mono text-slate-200">58p CBRE OM, Stonemark XLS, Fulton Tax Bill</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">Unit Mix:</span>
+              <span class="font-mono text-slate-200">8 Floorplans (381,644 SF)</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">RE Tax Extraction:</span>
+              <span class="font-bold text-brand-400 font-mono">$1,003,344.02 (County Bill)</span>
+            </div>
+          </div>
+
+          <button onclick="runPreset('arium_lenox_park')" id="btn-arium" class="w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-sm transition flex items-center justify-center space-x-2 border border-slate-700">
+            <i data-lucide="play" class="w-4 h-4"></i>
+            <span>Underwrite ARIUM Lenox Park</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Execution Status Bar (Hidden until clicked) -->
+    <div id="execution-status" class="hidden glass rounded-xl p-6 border border-brand-500/30 space-y-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-6 h-6 rounded-full border-2 border-brand-500 border-t-transparent animate-spin"></div>
+          <div>
+            <h4 id="status-title" class="font-semibold text-sm text-white">Ingesting Data Room Documents...</h4>
+            <p id="status-desc" class="text-xs text-slate-400">Parsing rent rolls and normalizing chart of accounts</p>
+          </div>
+        </div>
+        <span id="status-timer" class="text-xs font-mono text-brand-400">Processing</span>
+      </div>
+
+      <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+        <div id="status-progress-bar" class="bg-brand-500 h-1.5 rounded-full transition-all duration-300 w-1/3"></div>
+      </div>
+    </div>
+
+    <!-- Section 2: Underwriting Results Dashboard (Hidden until result ready) -->
+    <section id="results-section" class="hidden space-y-6">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-slate-800">
+        <div>
+          <span class="text-xs font-semibold px-2 py-0.5 rounded bg-brand-500/10 text-brand-400 border border-brand-500/20">Underwriting Complete</span>
+          <h2 id="res-property-name" class="text-2xl font-extrabold text-white mt-1">Property Returns Summary</h2>
+          <p id="res-property-addr" class="text-xs text-slate-400">Location</p>
+        </div>
+
+        <div class="flex items-center space-x-3">
+          <a id="btn-download-excel" href="#" class="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-sm transition flex items-center space-x-2 shadow-lg shadow-brand-600/30">
+            <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+            <span>Download Pro Forma (.xlsx)</span>
+          </a>
+          <a id="btn-download-lineage" href="#" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-sm transition flex items-center space-x-2 border border-slate-700">
+            <i data-lucide="file-text" class="w-4 h-4"></i>
+            <span>Download Audit Trail (.md)</span>
+          </a>
+          <button onclick="toggleLineageModal()" class="px-3 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white transition border border-slate-800" title="Inspect Lineage">
+            <i data-lucide="eye" class="w-4 h-4"></i>
+          </button>
+          <button onclick="confirmDeleteDeal()" class="px-4 py-2.5 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 hover:text-rose-100 transition border border-rose-800/60 flex items-center space-x-2" title="Delete Uploaded Files & Reset">
+            <i data-lucide="trash-2" class="w-4 h-4 text-rose-400"></i>
+            <span>Delete Deal & Reset</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="glass-card rounded-xl p-4 border border-slate-800">
+          <p class="text-xs text-slate-400 font-medium">Purchase Price</p>
+          <p id="res-price" class="text-xl font-bold text-white mt-1 font-mono">$0</p>
+          <p id="res-price-per-unit" class="text-[11px] text-slate-400 mt-0.5">$0 / unit</p>
+        </div>
+        <div class="glass-card rounded-xl p-4 border border-slate-800">
+          <p class="text-xs text-slate-400 font-medium">Total Units & Size</p>
+          <p id="res-units" class="text-xl font-bold text-white mt-1 font-mono">0 Units</p>
+          <p id="res-rsf" class="text-[11px] text-slate-400 mt-0.5">0 RSF</p>
+        </div>
+        <div class="glass-card rounded-xl p-4 border border-slate-800">
+          <p class="text-xs text-slate-400 font-medium">T-12 Operating Expenses</p>
+          <p id="res-opex" class="text-xl font-bold text-emerald-400 mt-1 font-mono">$0</p>
+          <p id="res-opex-per-unit" class="text-[11px] text-slate-400 mt-0.5">$0 / unit / yr</p>
+        </div>
+        <div class="glass-card rounded-xl p-4 border border-slate-800">
+          <p class="text-xs text-slate-400 font-medium">Model Integrity</p>
+          <p class="text-xl font-bold text-brand-400 mt-1 flex items-center space-x-1.5">
+            <i data-lucide="check-circle-2" class="w-5 h-5 text-brand-400"></i>
+            <span>100% Valid</span>
+          </p>
+          <p class="text-[11px] text-brand-300/80 mt-0.5">101,684 formulas live</p>
+        </div>
+      </div>
+
+      <!-- Details Grids: Unit Mix & T12 Expenses -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Unit Mix Table -->
+        <div class="glass-card rounded-xl p-5 border border-slate-800">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-bold text-white flex items-center space-x-2">
+              <i data-lucide="layout-grid" class="w-4 h-4 text-brand-400"></i>
+              <span>Normalized Unit Mix</span>
+            </h3>
+            <span class="text-xs text-slate-400">From Rent Roll & OM</span>
+          </div>
+          <div class="overflow-x-auto custom-scrollbar">
+            <table class="w-full text-left text-xs">
+              <thead class="text-slate-400 border-b border-slate-800 font-medium">
+                <tr>
+                  <th class="pb-2">Tier</th>
+                  <th class="pb-2 text-right">Units</th>
+                  <th class="pb-2 text-right">Avg SF</th>
+                  <th class="pb-2 text-right">In-Place</th>
+                  <th class="pb-2 text-right">Market</th>
+                  <th class="pb-2 text-right">Reno/Capex</th>
+                </tr>
+              </thead>
+              <tbody id="unit-mix-tbody" class="divide-y divide-slate-800/60 font-mono">
+                <!-- Injected via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- T-12 Operating Expenses Table -->
+        <div class="glass-card rounded-xl p-5 border border-slate-800">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-bold text-white flex items-center space-x-2">
+              <i data-lucide="receipt" class="w-4 h-4 text-emerald-400"></i>
+              <span>T-12 Operating Expenses (Standard COA)</span>
+            </h3>
+            <span class="text-xs text-slate-400">From Accounting P&L</span>
+          </div>
+          <div class="overflow-x-auto custom-scrollbar">
+            <table class="w-full text-left text-xs">
+              <thead class="text-slate-400 border-b border-slate-800 font-medium">
+                <tr>
+                  <th class="pb-2">Expense Category</th>
+                  <th class="pb-2">Unit Allocation</th>
+                  <th class="pb-2 text-right">$/Unit/Yr</th>
+                  <th class="pb-2 text-right">Annual Total</th>
+                </tr>
+              </thead>
+              <tbody id="t12-tbody" class="divide-y divide-slate-800/60 font-mono">
+                <!-- Injected via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3: Custom File Upload Mode -->
+    <section id="custom-upload" class="glass rounded-2xl p-8 border border-slate-800 space-y-6">
+      <div>
+        <h2 class="text-xl font-bold text-white flex items-center space-x-2">
+          <i data-lucide="upload-cloud" class="w-5 h-5 text-blue-400"></i>
+          <span>Upload Custom Deal Data Room</span>
+        </h2>
+        <p class="text-xs text-slate-400">Upload your raw deal files to generate a custom populated Waterman Pro Forma</p>
+      </div>
+
+      <form id="upload-form" onsubmit="handleCustomUpload(event)" class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1.5">Property Name</label>
+            <input type="text" id="cust-prop-name" placeholder="e.g. Parkview Residences" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1.5">Target Purchase Price ($)</label>
+            <input type="number" id="cust-price" placeholder="e.g. 25000000" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:border-brand-500 font-mono">
+          </div>
+        </div>
+
+        <!-- File Upload Zones -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Rent Roll -->
+          <div class="p-4 rounded-xl border border-dashed border-slate-700 hover:border-brand-500/50 transition bg-slate-900/40 text-center relative group">
+            <button type="button" onclick="clearFile('file-rent-roll')" class="absolute top-2.5 right-2.5 text-slate-500 hover:text-rose-400 transition" title="Clear Rent Roll file">
+              <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+            <i data-lucide="sheet" class="w-8 h-8 text-brand-400 mx-auto mb-2"></i>
+            <p class="text-xs font-semibold text-white">Rent Roll</p>
+            <p class="text-[11px] text-slate-400 mb-2">.xlsx, .xls, .pdf</p>
+            <input type="file" id="file-rent-roll" class="text-xs text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:bg-slate-800 file:text-slate-200 hover:file:bg-slate-700">
+          </div>
+
+          <!-- T-12 -->
+          <div class="p-4 rounded-xl border border-dashed border-slate-700 hover:border-brand-500/50 transition bg-slate-900/40 text-center relative group">
+            <button type="button" onclick="clearFile('file-t12')" class="absolute top-2.5 right-2.5 text-slate-500 hover:text-rose-400 transition" title="Clear T-12 file">
+              <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+            <i data-lucide="bar-chart-3" class="w-8 h-8 text-blue-400 mx-auto mb-2"></i>
+            <p class="text-xs font-semibold text-white">T-12 Operating Statement</p>
+            <p class="text-[11px] text-slate-400 mb-2">.xlsx, .xls, .pdf</p>
+            <input type="file" id="file-t12" class="text-xs text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:bg-slate-800 file:text-slate-200 hover:file:bg-slate-700">
+          </div>
+
+          <!-- OM -->
+          <div class="p-4 rounded-xl border border-dashed border-slate-700 hover:border-brand-500/50 transition bg-slate-900/40 text-center relative group">
+            <button type="button" onclick="clearFile('file-om')" class="absolute top-2.5 right-2.5 text-slate-500 hover:text-rose-400 transition" title="Clear OM file">
+              <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+            <i data-lucide="file-text" class="w-8 h-8 text-purple-400 mx-auto mb-2"></i>
+            <p class="text-xs font-semibold text-white">Offering Memo (OM)</p>
+            <p class="text-[11px] text-slate-400 mb-2">.pdf brochure</p>
+            <input type="file" id="file-om" class="text-xs text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:bg-slate-800 file:text-slate-200 hover:file:bg-slate-700">
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between pt-2">
+          <p class="text-xs text-slate-400">Uses institutional Waterman Empty Template with 101,684 live formulas.</p>
+          <div class="flex items-center space-x-3">
+            <button type="button" onclick="resetUploadForm()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs transition border border-slate-700 flex items-center space-x-1.5">
+              <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+              <span>Clear Files</span>
+            </button>
+            <button type="submit" id="btn-custom-upload" class="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm transition flex items-center space-x-2 shadow-lg shadow-blue-600/20">
+              <i data-lucide="play-circle" class="w-4 h-4"></i>
+              <span>Start AI Underwriting</span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </section>
+
+  </main>
+
+  <!-- Lineage Modal -->
+  <div id="lineage-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="glass max-w-4xl w-full max-h-[85vh] rounded-2xl border border-slate-700 flex flex-col overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+        <h3 class="font-bold text-white text-base flex items-center space-x-2">
+          <i data-lucide="shield-check" class="w-5 h-5 text-brand-400"></i>
+          <span>Data Lineage & Provenance Audit Trail</span>
+        </h3>
+        <button onclick="toggleLineageModal()" class="text-slate-400 hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <div id="lineage-modal-content" class="p-6 overflow-y-auto custom-scrollbar text-xs text-slate-300 space-y-4 font-mono">
+        <!-- Rendered markdown table -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    let currentDealData = null;
+
+    async function runPreset(presetId) {
+      showLoading(true, "Ingesting " + (presetId === 'miars_farm' ? 'Miars Farm' : 'ARIUM Lenox Park') + "...");
+      
+      try {
+        const res = await fetch(`/api/run-preset/${presetId}`, { method: 'POST' });
+        const data = await res.json();
+        
+        if (data.success) {
+          currentDealData = data;
+          renderResults(data);
+        } else {
+          alert("Error: " + data.error);
+        }
+      } catch (err) {
+        alert("Failed to run underwriting: " + err);
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    async function handleCustomUpload(e) {
+      e.preventDefault();
+      const propName = document.getElementById('cust-prop-name').value || "Custom Deal";
+      const price = document.getElementById('cust-price').value || 20000000;
+      
+      const formData = new FormData();
+      formData.append('deal_name', propName);
+      formData.append('purchase_price', price);
+      
+      const rr = document.getElementById('file-rent-roll').files[0];
+      const t12 = document.getElementById('file-t12').files[0];
+      const om = document.getElementById('file-om').files[0];
+      
+      if (rr) formData.append('rent_roll', rr);
+      if (t12) formData.append('t12', t12);
+      if (om) formData.append('om', om);
+
+      showLoading(true, "Processing custom uploaded data room...");
+
+      try {
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (data.success) {
+          currentDealData = data;
+          renderResults(data);
+        } else {
+          alert("Error: " + data.error);
+        }
+      } catch (err) {
+        alert("Upload error: " + err);
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    function showLoading(show, msg = "Processing...") {
+      const el = document.getElementById('execution-status');
+      if (show) {
+        el.classList.remove('hidden');
+        document.getElementById('status-title').innerText = msg;
+        let p = 20;
+        const bar = document.getElementById('status-progress-bar');
+        const interval = setInterval(() => {
+          if (p < 90) {
+            p += 20;
+            bar.style.width = p + '%';
+          } else {
+            clearInterval(interval);
+          }
+        }, 300);
+      } else {
+        document.getElementById('status-progress-bar').style.width = '100%';
+        setTimeout(() => el.classList.add('hidden'), 500);
+      }
+    }
+
+    function renderResults(res) {
+      const deal = res.deal;
+      document.getElementById('results-section').classList.remove('hidden');
+      document.getElementById('results-section').scrollIntoView({ behavior: 'smooth' });
+
+      document.getElementById('res-property-name').innerText = deal.property_name;
+      document.getElementById('res-property-addr').innerText = deal.address + ", " + deal.city_state_zip;
+      document.getElementById('res-price').innerText = '$' + Number(deal.purchase_price).toLocaleString();
+      document.getElementById('res-price-per-unit').innerText = '$' + Math.round(deal.purchase_price / deal.total_units).toLocaleString() + ' / unit';
+      document.getElementById('res-units').innerText = deal.total_units + ' Units';
+      document.getElementById('res-rsf').innerText = Number(deal.total_rsf).toLocaleString() + ' RSF';
+
+      const exp = deal.t12_expenses;
+      const totalOpexPerUnit = exp.payroll + exp.utilities + exp.repairs_maint + exp.turnover + exp.marketing + exp.general_admin + exp.insurance;
+      document.getElementById('res-opex').innerText = '$' + Math.round(totalOpexPerUnit * deal.total_units + exp.real_estate_taxes).toLocaleString();
+      document.getElementById('res-opex-per-unit').innerText = '$' + Math.round(totalOpexPerUnit).toLocaleString() + ' / unit / yr';
+
+      // Download links
+      document.getElementById('btn-download-excel').href = `/api/download/${res.output_excel}`;
+      document.getElementById('btn-download-lineage').href = `/api/download/DATA_LINEAGE_AND_PROVENANCE.md`;
+
+      // Render Unit Mix Table
+      const umTbody = document.getElementById('unit-mix-tbody');
+      umTbody.innerHTML = '';
+      deal.unit_mix.forEach(u => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td class="py-2.5 font-sans font-semibold text-white">${u.name}</td>
+          <td class="py-2.5 text-right text-slate-200">${u.unit_count}</td>
+          <td class="py-2.5 text-right text-slate-400">${u.avg_sf.toLocaleString()}</td>
+          <td class="py-2.5 text-right text-emerald-400 font-semibold">$${u.in_place_rent.toFixed(2)}</td>
+          <td class="py-2.5 text-right text-brand-400 font-semibold">$${u.market_rent.toFixed(2)}</td>
+          <td class="py-2.5 text-right text-slate-300">${u.renovated_units}u @ $${u.reno_capex_per_unit.toLocaleString()}</td>
+        `;
+        umTbody.appendChild(row);
+      });
+
+      // Render T-12 Table
+      const t12Tbody = document.getElementById('t12-tbody');
+      t12Tbody.innerHTML = '';
+      const t12Lines = [
+        { name: 'Payroll & Personnel', alloc: 'All Units', per_unit: exp.payroll, total: exp.payroll * deal.total_units },
+        { name: 'Utilities (Water/Gas/Elec)', alloc: 'All Units', per_unit: exp.utilities, total: exp.utilities * deal.total_units },
+        { name: 'Repairs & Maintenance', alloc: 'All Units', per_unit: exp.repairs_maint, total: exp.repairs_maint * deal.total_units },
+        { name: 'Turnover & Redecoration', alloc: 'All Units', per_unit: exp.turnover, total: exp.turnover * deal.total_units },
+        { name: 'Marketing & Advertising', alloc: 'All Units', per_unit: exp.marketing, total: exp.marketing * deal.total_units },
+        { name: 'General & Administrative', alloc: 'All Units', per_unit: exp.general_admin, total: exp.general_admin * deal.total_units },
+        { name: 'Insurance (P&C / Liability)', alloc: 'All Units', per_unit: exp.insurance, total: exp.insurance * deal.total_units },
+        { name: 'Real Estate Taxes', alloc: 'Total Annual', per_unit: Math.round(exp.real_estate_taxes / deal.total_units), total: exp.real_estate_taxes },
+      ];
+
+      t12Lines.forEach(item => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td class="py-2.5 font-sans font-medium text-slate-200">${item.name}</td>
+          <td class="py-2.5 font-sans text-slate-400">${item.alloc}</td>
+          <td class="py-2.5 text-right text-slate-200">$${item.per_unit.toLocaleString()}</td>
+          <td class="py-2.5 text-right text-emerald-400 font-semibold">$${item.total.toLocaleString()}</td>
+        `;
+        t12Tbody.appendChild(row);
+      });
+
+      lucide.createIcons();
+    }
+
+    function clearFile(inputId) {
+      const el = document.getElementById(inputId);
+      if (el) el.value = '';
+    }
+
+    function resetUploadForm() {
+      document.getElementById('upload-form').reset();
+    }
+
+    async function confirmDeleteDeal() {
+      if (!confirm("Are you sure you want to delete this deal's uploaded data and reset the dashboard?")) {
+        return;
+      }
+      
+      if (currentDealData) {
+        const sessionId = currentDealData.session_id;
+        const outputFile = currentDealData.output_excel;
+        
+        if (sessionId) {
+          try {
+            await fetch(`/api/uploads/${sessionId}?output_file=${outputFile}`, { method: 'DELETE' });
+          } catch (err) {
+            console.error("Delete request error:", err);
+          }
+        }
+      }
+      
+      currentDealData = null;
+      document.getElementById('results-section').classList.add('hidden');
+      resetUploadForm();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function deletePreset(presetId) {
+      const name = presetId === 'miars_farm' ? 'Miars Farm' : 'ARIUM Lenox Park';
+      if (!confirm(`Are you sure you want to delete the ${name} sample data room card and any generated output files?`)) {
+        return;
+      }
+
+      try {
+        await fetch(`/api/presets/${presetId}`, { method: 'DELETE' });
+      } catch (err) {
+        console.error("Delete preset error:", err);
+      }
+
+      let deleted = JSON.parse(localStorage.getItem('deleted_presets') || '[]');
+      if (!deleted.includes(presetId)) deleted.push(presetId);
+      localStorage.setItem('deleted_presets', JSON.stringify(deleted));
+
+      const cardId = presetId === 'miars_farm' ? 'card-preset-miars' : 'card-preset-arium';
+      const card = document.getElementById(cardId);
+      if (card) card.classList.add('hidden');
+
+      checkPresetsVisibility();
+
+      if (currentDealData && currentDealData.preset_id === presetId) {
+        document.getElementById('results-section').classList.add('hidden');
+        currentDealData = null;
+      }
+    }
+
+    function checkPresetsVisibility() {
+      let deleted = JSON.parse(localStorage.getItem('deleted_presets') || '[]');
+      if (deleted.includes('miars_farm')) {
+        const c = document.getElementById('card-preset-miars');
+        if (c) c.classList.add('hidden');
+      }
+      if (deleted.includes('arium_lenox_park')) {
+        const c = document.getElementById('card-preset-arium');
+        if (c) c.classList.add('hidden');
+      }
+
+      const restoreBtn = document.getElementById('btn-restore-presets');
+      if (deleted.length > 0) {
+        restoreBtn.classList.remove('hidden');
+      } else {
+        restoreBtn.classList.add('hidden');
+      }
+    }
+
+    function restorePresets() {
+      localStorage.removeItem('deleted_presets');
+      const c1 = document.getElementById('card-preset-miars');
+      const c2 = document.getElementById('card-preset-arium');
+      if (c1) c1.classList.remove('hidden');
+      if (c2) c2.classList.remove('hidden');
+      document.getElementById('btn-restore-presets').classList.add('hidden');
+      lucide.createIcons();
+    }
+
+    // Check visibility on page load
+    checkPresetsVisibility();
+
+
+    async function toggleLineageModal() {
+      const modal = document.getElementById('lineage-modal');
+      const isHidden = modal.classList.contains('hidden');
+      if (isHidden) {
+        modal.classList.remove('hidden');
+        const contentDiv = document.getElementById('lineage-modal-content');
+        contentDiv.innerHTML = '<div class="text-center py-4 text-slate-400">Loading lineage report...</div>';
+        try {
+          const res = await fetch('/api/view-lineage');
+          const text = await res.text();
+          contentDiv.innerHTML = `<pre class="whitespace-pre-wrap font-mono text-xs text-slate-300 leading-relaxed">${text}</pre>`;
+        } catch (e) {
+          contentDiv.innerText = "Error loading lineage: " + e;
+        }
+      } else {
+        modal.classList.add('hidden');
+      }
+    }
+  </script>
+</body>
+</html>
