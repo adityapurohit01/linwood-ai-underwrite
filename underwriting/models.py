@@ -52,6 +52,7 @@ class DealUnderwriting:
     purchase_price: float
     unit_mix: List[UnitMixItem]
     t12_expenses: T12Expenses
+    year_built: str = "1998 / Renovated 2021"
     
     # Capitalization & Closing Costs
     equity_placement_fee: float = 350000.0
