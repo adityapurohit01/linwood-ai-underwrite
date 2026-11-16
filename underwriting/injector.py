@@ -9,7 +9,7 @@ import os
 import re
 import zipfile
 import shutil
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, Any
 from .models import DealUnderwriting
 
 
@@ -54,13 +54,37 @@ def inject_waterman_model(
         xml = re.sub(r'(<c r="' + coord + r'"[^>]*?)\s+t="s"', r'\1', xml)
         return xml
 
+    def set_inline_str(xml: str, coord: str, val: Any) -> str:
+        if not val:
+            return xml
+        val_clean = str(val).strip().replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+        sc = r'(<c r="' + coord + r'"[^>]*?)\s*/>'
+        if re.search(sc, xml):
+            return re.sub(sc, r'\g<1> t="inlineStr"><is><t>' + val_clean + r'</t></is></c>', xml)
+        op = r'(<c r="' + coord + r'"[^>]*?>).*?(</c>)'
+        if re.search(op, xml):
+            xml = re.sub(r'(<c r="' + coord + r'"[^>]*?)\s+t="[^"]*"', r'\1', xml)
+            return re.sub(op, r'\g<1><is><t>' + val_clean + r'</t></is>\2', xml)
+        return xml
+
     # =========================================================================
     # 2. INJECT SHEET 3: Inputs (xl/worksheets/sheet3.xml)
     # =========================================================================
     s3_xml = files['xl/worksheets/sheet3.xml'].decode('utf-8')
 
+    # Property General Information (Project Name, Address, City/State/Zip, Asset Class)
+    prop_name = getattr(deal, 'property_name', 'Commercial Asset') or 'Commercial Asset'
+    prop_addr = getattr(deal, 'address', '') or (f"{prop_name} Dr" if prop_name else '100 Main St')
+    prop_csz = getattr(deal, 'city_state_zip', '') or 'Major Metro Area'
+    prop_class = getattr(deal, 'asset_class', 'Class A Multifamily') or 'Class A Multifamily'
+
+    s3_mod = set_inline_str(s3_xml, 'F13', prop_name)
+    s3_mod = set_inline_str(s3_mod, 'F14', prop_addr)
+    s3_mod = set_inline_str(s3_mod, 'F15', prop_csz)
+    s3_mod = set_inline_str(s3_mod, 'F16', prop_class)
+
     # Purchase Price & Capitalization
-    s3_mod = set_num(s3_xml, 'M22', deal.purchase_price)
+    s3_mod = set_num(s3_mod, 'M22', deal.purchase_price)
     s3_mod = set_num(s3_mod, 'M23', deal.purchase_price)
     s3_mod = set_num(s3_mod, 'M26', getattr(deal, 'equity_placement_fee', round(deal.purchase_price * 0.02, 2)))
     s3_mod = set_num(s3_mod, 'M27', getattr(deal, 'working_capital', round(max(250000.0, deal.total_units * 1500.0), 2)))

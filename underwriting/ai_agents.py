@@ -501,7 +501,8 @@ class T12FinancialAgent:
             lbl_lower = lbl.lower()
             if 'total' in lbl_lower or any(k in lbl_lower for k in [
                 'tax', 'insur', 'personnel', 'salary', 'payroll', 'utility', 'utilities',
-                'repair', 'maint', 'turnover', 'admin', 'management', 'marketing', 'adver', 'contract', 'fee'
+                'repair', 'maint', 'turnover', 'admin', 'management', 'marketing', 'adver', 'contract', 'fee',
+                'rent', 'revenue', 'income', 'gpr', 'potential', 'lease', 'vacancy', 'concession', 'bad debt'
             ]):
                 candidate_items.append({"line": lbl, "total": round(tot, 2)})
 
@@ -516,12 +517,12 @@ Categories:
 - 'repairs_maint' (Routine repairs, HVAC, plumbing, supplies)
 - 'turnover' (Unit make-ready, turns, carpet cleaning)
 - 'contract_services' (Landscaping, pest control, security, elevator contract)
-- 'marketing' (Advertising, ILS, resident relations)
+- 'marketing' (Advertising, signs, ILS, resident relations. ONLY for advertising costs, NEVER for Market Rent!)
 - 'general_admin' (Office supplies, Yardi software, legal, audit, licenses)
 - 'management_fee' (Property management fee)
 - 'insurance' (Property, liability, hazard insurance)
 - 'real_estate_taxes' (Ad valorem property taxes, school taxes)
-- 'market_rent' (Gross potential rent at 100%)
+- 'market_rent' (Gross potential rent at 100%, Market Rent, Apartment Rental Revenue. NEVER map to marketing!)
 - 'loss_to_lease' (Loss to lease)
 - 'vacancy' (Economic or physical vacancy)
 - 'concessions' (Rent concessions)
@@ -567,6 +568,20 @@ Lines and Annual Totals:
         for item in lines:
             lbl_clean = item["label"].strip().lower()
             cat = label_to_cat.get(lbl_clean)
+
+            # Deterministic COA semantic safeguards
+            if any(k in lbl_clean for k in ['market rent', 'gross potential', 'gross market', 'rent - market', 'mf400500']):
+                if not any(k in lbl_clean for k in ['advertising', 'adver', 'flyer', 'promotion']):
+                    cat = 'market_rent'
+            elif any(k in lbl_clean for k in ['loss to lease', 'gain / (loss) to lease', 'gain/(loss) to lease']):
+                cat = 'loss_to_lease'
+            elif any(k in lbl_clean for k in ['rent concession', 'rent concessions']):
+                cat = 'concessions'
+            elif any(k in lbl_clean for k in ['vacancy loss', 'physical vacancy', 'model unit', 'units out of service']):
+                cat = 'vacancy'
+            elif any(k in lbl_clean for k in ['write offs - rent', 'bad debt']):
+                cat = 'bad_debt'
+
             if not cat or cat == 'ignore':
                 continue
 
@@ -651,26 +666,38 @@ Lines and Annual Totals:
         for item in lines:
             lbl = item["label"].lower().strip()
             cat = "ignore"
-            if any(k in lbl for k in ['total', 'net operating income', 'subtotal', 'noi', 'ebitda', 'revenue', 'income']):
+            if any(lbl.startswith(k) for k in ['total', 'subtotal', 'net rental', 'net operating', 'noi', 'ebitda', 'summary']):
                 cat = "ignore"
+            elif any(k in lbl for k in ['total ', 'total:', 'total -', 'subtotal ']):
+                cat = "ignore"
+            elif any(k in lbl for k in ['market rent', 'scheduled rent', 'rent - market', 'mf400500', 'gross potential rent']):
+                cat = "market_rent"
+            elif any(k in lbl for k in ['loss to lease', 'gain / (loss) to lease', 'gain/(loss)']):
+                cat = "loss_to_lease"
+            elif any(k in lbl for k in ['rent concession', 'concession']):
+                cat = "concessions"
+            elif any(k in lbl for k in ['vacancy loss', 'physical vacancy', 'model unit', 'units out of service', 'vacancy']):
+                cat = "vacancy"
+            elif any(k in lbl for k in ['bad debt', 'write off', 'uncollected']):
+                cat = "bad_debt"
             elif any(k in lbl for k in ['payroll', 'salary', 'wage', 'bonus', 'employee', 'staff', 'personnel', 'health']):
                 cat = "payroll"
             elif any(k in lbl for k in ['utilit', 'water', 'sewer', 'electric', 'power', 'gas', 'trash', 'waste']):
                 cat = "utilities"
             elif any(k in lbl for k in ['repair', 'maint', 'plumb', 'hvac', 'appliance', 'hardware', 'supplies']):
-                cat = "repairs & maintenance"
+                cat = "repairs_maint"
             elif any(k in lbl for k in ['turnover', 'turn', 'decorat', 'clean', 'carpet', 'paint']):
                 cat = "turnover"
             elif any(k in lbl for k in ['contract', 'landscap', 'grounds', 'pest', 'security', 'elevator', 'pool']):
-                cat = "contract services"
-            elif any(k in lbl for k in ['market', 'advertis', 'promot', 'sign', 'locator', 'brochure']):
+                cat = "contract_services"
+            elif any(k in lbl for k in ['marketing', 'advertis', 'promot', 'sign', 'locator', 'brochure']):
                 cat = "marketing"
             elif any(k in lbl for k in ['admin', 'office', 'software', 'telecom', 'legal', 'audit', 'bank', 'license']):
-                cat = "general & admin"
+                cat = "general_admin"
             elif any(k in lbl for k in ['insurance', 'hazard', 'casualty', 'liability']):
                 cat = "insurance"
             elif any(k in lbl for k in ['real estate tax', 'property tax', 'ad valorem', 'county tax', 'school tax', 're tax']):
-                cat = "real estate taxes"
+                cat = "real_estate_taxes"
             label_to_cat[lbl] = cat
         return label_to_cat
 
