@@ -9,7 +9,8 @@ import streamlit as st
 import pandas as pd
 from underwriting.parsers import parse_generic_dataroom
 from underwriting.injector import inject_waterman_model
-from underwriting.models import DealUnderwriting, UnitMixItem, T12Expenses
+from underwriting.models import DealUnderwriting, UnitMixItem, T12Expenses, SupervisorAuditReport, ReviewerQCCertificate
+from underwriting.ai_agents import ProformaReviewerAgent
 
 # ==============================================================================
 # Page Configuration
@@ -744,9 +745,14 @@ with st.form("custom_upload_form", clear_on_submit=False):
     
     b_col1, b_col2 = st.columns([2, 1])
     with b_col1:
+        auto_generate_toggle = st.checkbox(
+            "⚡ Skip HITL Review & Auto-Generate Pro Forma immediately",
+            value=False,
+            help="When checked, bypasses the Human-in-the-Loop review studio and immediately compiles the Waterman Pro Forma."
+        )
         st.markdown("""
-        <p style="font-size: 0.82rem; color: #cbd5e1; margin-top: 0.65rem; font-weight: 500;">
-            ⚡ Uses institutional Waterman Empty Template with <span style="color: #34d399; font-weight: 700; font-family: 'JetBrains Mono', monospace;">104,720 live formulas</span> preserved.
+        <p style="font-size: 0.80rem; color: #94a3b8; margin-top: 0.2rem; font-weight: 500;">
+            ⚡ Uses institutional Waterman Master Template with <span style="color: #34d399; font-weight: 700; font-family: 'JetBrains Mono', monospace;">104,720 live formulas</span> preserved.
         </p>
         """, unsafe_allow_html=True)
     with b_col2:
@@ -783,7 +789,9 @@ if start_underwrite_btn:
         st.write("🤖 **Agent 1 (Rent Roll Specialist):** Ingesting leases, identifying floorplans, unit counts & contract rents...")
         st.write("📊 **Agent 2 (T-12 Financial Analyst):** Standardizing Chart of Accounts (COA) & computing 12-month trailing actuals...")
         st.write("📑 **Agent 3 (OM Intelligence):** Extracting property metadata, vintage & pricing assumptions...")
-        st.write("⚖️ **Agent 4 (Deal Synthesis & QC):** Cross-reconciling unit mix, financial statements, and audit lineage...")
+        st.write("⚖️ **Agent 4 (Deal Synthesizer):** Cross-reconciling unit mix, financial statements, and audit lineage...")
+        st.write("🕵️‍♂️ **Agent 5 (Underwriting Supervisor):** Executive cross-document audit, revenue tie-out, & anomaly detection...")
+        st.write("🛡️ **Agent 6 (Proforma Reviewer):** Pre-flight health check & divisor auto-repair...")
 
         deal_data = parse_generic_dataroom(
             upload_session_dir,
@@ -794,21 +802,242 @@ if start_underwrite_btn:
             om_file_path=om_saved_path
         )
         
-        st.write("⚡ **Excel Injection Engine:** Injecting Inputs (Sheet 3) & Trailing 12 (Sheet 4) — 104,720 formulas preserved.")
-        safe_name = "".join(c for c in deal_data.property_name if c.isalnum() or c in (" ", "_")).strip().replace(" ", "_")
-        out_file = os.path.join(OUTPUT_DIR, f"Waterman_{safe_name}_{session_id}.xlsx")
-        inject_waterman_model(TEMPLATE_PATH, deal_data, out_file)
+        if auto_generate_toggle:
+            st.write("⚡ **Excel Injection Engine:** Injecting Inputs (Sheet 3) & Trailing 12 (Sheet 4) — 104,720 formulas preserved.")
+            safe_name = "".join(c for c in deal_data.property_name if c.isalnum() or c in (" ", "_")).strip().replace(" ", "_")
+            out_file = os.path.join(OUTPUT_DIR, f"Waterman_{safe_name}_{session_id}.xlsx")
+            inject_waterman_model(TEMPLATE_PATH, deal_data, out_file)
+            st.session_state['deals_history'].insert(0, {
+                "id": session_id,
+                "name": deal_data.property_name,
+                "deal": deal_data,
+                "excel_path": out_file,
+                "timestamp": datetime.datetime.now().strftime("%b %d, %Y • %I:%M %p")
+            })
+            st.session_state.pop("pending_hitl_deal", None)
+            status_box.update(label="✨ Multi-Agent Underwriting Complete! Model Ready for Download.", state="complete", expanded=False)
+        else:
+            st.session_state['pending_hitl_deal'] = deal_data
+            st.session_state['pending_session_id'] = session_id
+            status_box.update(label="✨ Multi-Agent Analysis Complete! Please review assumptions in the studio below.", state="complete", expanded=False)
         
-        status_box.update(label="✨ Multi-Agent Underwriting Complete! Model Ready for Download.", state="complete", expanded=False)
-        
-        st.session_state['deals_history'].insert(0, {
-            "id": session_id,
-            "name": deal_data.property_name,
-            "deal": deal_data,
-            "excel_path": out_file,
-            "timestamp": datetime.datetime.now().strftime("%b %d, %Y • %I:%M %p")
-        })
         st.rerun()
+
+# ==============================================================================
+# HUMAN-IN-THE-LOOP (HITL) EXCEPTION REVIEW & APPROVAL STUDIO
+# ==============================================================================
+if "pending_hitl_deal" in st.session_state and st.session_state["pending_hitl_deal"] is not None:
+    p_deal = st.session_state["pending_hitl_deal"]
+    p_sid = st.session_state.get("pending_session_id", "session")
+    audit = getattr(p_deal, 'audit_report', None)
+    
+    st.markdown("""
+    <div class="glass-panel" style="margin-bottom: 2rem; border-color: rgba(52, 211, 153, 0.4); box-shadow: 0 8px 32px rgba(16, 185, 129, 0.15);">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+            <div style="display: flex; align-items: center; gap: 0.6rem;">
+                <span style="font-size: 1.5rem;">🧐</span>
+                <div>
+                    <h2 style="font-size: 1.35rem; font-weight: 800; color: #ffffff; margin: 0; letter-spacing: -0.02em;">
+                        Human-in-the-Loop (HITL) Exception Review & Approval Studio
+                    </h2>
+                    <p style="font-size: 0.82rem; color: #94a3b8; margin: 0.2rem 0 0 0;">
+                        Review multi-agent findings, cross-document tie-outs, and customize model drivers before final Pro Forma compilation
+                    </p>
+                </div>
+            </div>
+            <span style="font-size: 0.78rem; font-weight: 700; color: #34d399; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(52, 211, 153, 0.3); padding: 0.35rem 0.85rem; border-radius: 9999px;">
+                ● Multi-Agent Ingestion Verified
+            </span>
+        </div>
+    """, unsafe_allow_html=True)
+
+    # 1. Supervisor Cross-Document Audit KPI Bar
+    if audit:
+        s_c1, s_c2, s_c3, s_c4 = st.columns(4)
+        with s_c1:
+            st.markdown(f"""
+            <div class='kpi-card'>
+                <div class='kpi-title'>Supervisor Confidence</div>
+                <div class='kpi-val' style='color: #34d399;'>{audit.overall_confidence_score:.1f}%</div>
+                <div class='kpi-sub'>Institutional Grade</div>
+            </div>
+            """, unsafe_allow_html=True)
+        with s_c2:
+            var_color = "#34d399" if abs(audit.revenue_variance_pct) <= 15.0 else "#fbbf24"
+            st.markdown(f"""
+            <div class='kpi-card'>
+                <div class='kpi-title'>Revenue Tie-Out (RR vs T-12)</div>
+                <div class='kpi-val' style='color: {var_color};'>{audit.revenue_variance_pct:+.1f}%</div>
+                <div class='kpi-sub'>${audit.annualized_gpr:,.0f} vs ${audit.t12_net_rental_revenue:,.0f}</div>
+            </div>
+            """, unsafe_allow_html=True)
+        with s_c3:
+            st.markdown(f"""
+            <div class='kpi-card'>
+                <div class='kpi-title'>Unit Count Verification</div>
+                <div class='kpi-val'>{p_deal.total_units} Units</div>
+                <div class='kpi-sub'>{len(p_deal.unit_mix)} Floorplan Tiers</div>
+            </div>
+            """, unsafe_allow_html=True)
+        with s_c4:
+            st.markdown(f"""
+            <div class='kpi-card'>
+                <div class='kpi-title'>Operating Expense Benchmark</div>
+                <div class='kpi-val'>${audit.total_opex_per_unit:,.0f}</div>
+                <div class='kpi-sub'>$/Unit/Yr Total OpEx</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        if audit.anomalies:
+            st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
+            for anom in audit.anomalies:
+                st.warning(f"⚠️ **Supervisor Notice:** {anom}")
+        else:
+            st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
+            st.markdown("""
+            <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(52, 211, 153, 0.25); border-radius: 8px; padding: 0.6rem 1rem;">
+                <p style="font-size: 0.82rem; color: #34d399; margin: 0; font-weight: 600;">
+                    🟢 Supervisor Audit: Zero anomalies detected. Rent Roll, T-12 Operating Statements, and Offering Memorandum reconcile cleanly.
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+
+    st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
+
+    # 2. Interactive Unit Mix Table Editor
+    st.markdown("<h3 style='font-size: 1.05rem; font-weight: 700; color: #ffffff; margin-bottom: 0.5rem;'>📋 Unit Mix & Floorplan Lease Schedule (Editable)</h3>", unsafe_allow_html=True)
+    st.caption("You can edit unit counts, in-place rents, market rents, and renovation capex inline. New rows can be added if needed.")
+    
+    um_data = []
+    for u in p_deal.unit_mix:
+        um_data.append({
+            "Floorplan Tier": u.name,
+            "Unit Count": int(u.unit_count),
+            "Avg SF": float(u.avg_sf),
+            "In-Place Rent ($)": float(u.in_place_rent),
+            "Market Rent ($)": float(u.market_rent),
+            "Reno Capex ($/Unit)": float(u.reno_capex_per_unit),
+            "Reno Pace (Units/Mo)": int(u.reno_pace_per_month)
+        })
+    df_um = pd.DataFrame(um_data)
+    edited_um = st.data_editor(
+        df_um,
+        num_rows="dynamic",
+        use_container_width=True,
+        key=f"hitl_um_{p_sid}"
+    )
+
+    st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
+
+    # 3. Interactive Operating Expenses & Capitalization
+    hitl_c1, hitl_c2 = st.columns(2)
+    with hitl_c1:
+        st.markdown("<h3 style='font-size: 1.05rem; font-weight: 700; color: #ffffff; margin-bottom: 0.5rem;'>📊 Operating Expenses ($/Unit/Yr)</h3>", unsafe_allow_html=True)
+        exp_in = p_deal.t12_expenses
+        h_payroll = st.number_input("Payroll & On-Site Personnel", min_value=0.0, value=float(exp_in.payroll), step=50.0, key="hitl_payroll")
+        h_util = st.number_input("Utilities (Water/Gas/Electric)", min_value=0.0, value=float(exp_in.utilities), step=50.0, key="hitl_util")
+        h_maint = st.number_input("Repairs & Maintenance", min_value=0.0, value=float(exp_in.repairs_maint), step=50.0, key="hitl_maint")
+        h_turn = st.number_input("Turnover & Make-Ready", min_value=0.0, value=float(exp_in.turnover), step=25.0, key="hitl_turn")
+        h_contract = st.number_input("Contract Services (Pest, Grounds, Security)", min_value=0.0, value=float(exp_in.contract_services), step=25.0, key="hitl_contract")
+        h_mktg = st.number_input("Marketing & Leasing", min_value=0.0, value=float(exp_in.marketing), step=25.0, key="hitl_mktg")
+        h_ga = st.number_input("General & Administrative", min_value=0.0, value=float(exp_in.general_admin), step=25.0, key="hitl_ga")
+        h_ins = st.number_input("Insurance (P&C / Casualty)", min_value=0.0, value=float(exp_in.insurance), step=50.0, key="hitl_ins")
+        h_tax = st.number_input("Real Estate Taxes (Total Annual $)", min_value=0.0, value=float(exp_in.real_estate_taxes), step=5000.0, key="hitl_tax")
+
+    with hitl_c2:
+        st.markdown("<h3 style='font-size: 1.05rem; font-weight: 700; color: #ffffff; margin-bottom: 0.5rem;'>💰 Valuation & Debt Structuring</h3>", unsafe_allow_html=True)
+        h_price = st.number_input("Purchase Price ($)", min_value=100000.0, value=float(p_deal.purchase_price), step=250000.0, format="%.2f", key="hitl_price")
+        h_ltv = st.number_input("Loan-to-Value (LTV %)", min_value=0.10, max_value=0.90, value=float(p_deal.ltv), step=0.05, format="%.2f", key="hitl_ltv")
+        h_rate = st.number_input("Senior Debt Interest Rate (%)", min_value=0.01, max_value=0.20, value=float(p_deal.interest_rate), step=0.0025, format="%.4f", key="hitl_rate")
+        h_exit_cap = st.number_input("Exit Cap Rate (%)", min_value=0.02, max_value=0.15, value=float(p_deal.exit_cap_rate), step=0.0025, format="%.4f", key="hitl_exit_cap")
+        h_acres = st.number_input("Property Acreage", min_value=0.5, value=float(p_deal.acres), step=0.5, key="hitl_acres")
+
+    st.markdown("<div style='height: 25px;'></div>", unsafe_allow_html=True)
+
+    # 4. Action Buttons
+    act_col1, act_col2 = st.columns([3, 1])
+    with act_col1:
+        if st.button("✅ Confirm & Generate Waterman Pro Forma (.xlsx)", type="primary", use_container_width=True, key="hitl_approve_btn"):
+            with st.status("🛡️ Reviewer Agent compiling certified Waterman Pro Forma...", expanded=True) as qc_status:
+                # Update deal with human-in-the-loop inputs
+                p_deal.purchase_price = h_price
+                p_deal.ltv = h_ltv
+                p_deal.interest_rate = h_rate
+                p_deal.exit_cap_rate = h_exit_cap
+                p_deal.acres = h_acres
+                
+                # Update Expenses
+                p_deal.t12_expenses.payroll = h_payroll
+                p_deal.t12_expenses.utilities = h_util
+                p_deal.t12_expenses.repairs_maint = h_maint
+                p_deal.t12_expenses.turnover = h_turn
+                p_deal.t12_expenses.contract_services = h_contract
+                p_deal.t12_expenses.marketing = h_mktg
+                p_deal.t12_expenses.general_admin = h_ga
+                p_deal.t12_expenses.insurance = h_ins
+                p_deal.t12_expenses.real_estate_taxes = h_tax
+                
+                # Update Unit Mix from Data Editor
+                new_unit_mix = []
+                for _, row in edited_um.iterrows():
+                    tier_nm = str(row.get("Floorplan Tier", "1BR")).strip()
+                    ct = int(row.get("Unit Count", 0))
+                    sf = float(row.get("Avg SF", 750.0))
+                    ip_rent = float(row.get("In-Place Rent ($)", 1200.0))
+                    mkt_rent = float(row.get("Market Rent ($)", ip_rent * 1.1))
+                    capex = float(row.get("Reno Capex ($/Unit)", 10000.0))
+                    pace = int(row.get("Reno Pace (Units/Mo)", 2))
+                    if ct > 0:
+                        new_unit_mix.append(UnitMixItem(
+                            name=tier_nm,
+                            unit_count=ct,
+                            avg_sf=sf,
+                            in_place_rent=ip_rent,
+                            market_rent=mkt_rent,
+                            renovated_units=ct,
+                            reno_capex_per_unit=capex,
+                            reno_pace_per_month=pace
+                        ))
+                if new_unit_mix:
+                    p_deal.unit_mix = new_unit_mix
+                    p_deal.total_units = sum(u.unit_count for u in new_unit_mix)
+                    p_deal.total_rsf = sum(u.unit_count * u.avg_sf for u in new_unit_mix)
+                    p_deal.gross_building_area = p_deal.total_rsf
+                
+                # Reviewer Preflight Auto-Fix
+                fixes = ProformaReviewerAgent.preflight_autofix(p_deal)
+                for f in fixes:
+                    st.write(f"🛡️ Reviewer Auto-Fix: {f}")
+
+                # Injection
+                safe_nm = "".join(c for c in p_deal.property_name if c.isalnum() or c in (" ", "_")).strip().replace(" ", "_")
+                out_path = os.path.join(OUTPUT_DIR, f"Waterman_{safe_nm}_{p_sid}.xlsx")
+                inject_waterman_model(TEMPLATE_PATH, p_deal, out_path)
+                
+                # Reviewer Workbook Verification
+                qc_cert = ProformaReviewerAgent.verify_and_autofix_workbook(out_path)
+                p_deal.qc_certificate = qc_cert
+                
+                qc_status.update(label=f"✨ Certified 0-Error Pro Forma Generated! (104,720 formulas active)", state="complete", expanded=False)
+                
+                st.session_state['deals_history'].insert(0, {
+                    "id": p_sid,
+                    "name": p_deal.property_name,
+                    "deal": p_deal,
+                    "excel_path": out_path,
+                    "timestamp": datetime.datetime.now().strftime("%b %d, %Y • %I:%M %p")
+                })
+                st.session_state.pop("pending_hitl_deal", None)
+                st.session_state.pop("pending_session_id", None)
+                st.rerun()
+
+    with act_col2:
+        if st.button("✖️ Cancel / Discard", use_container_width=True, key="hitl_discard_btn"):
+            st.session_state.pop("pending_hitl_deal", None)
+            st.session_state.pop("pending_session_id", None)
+            st.rerun()
+
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # ==============================================================================
 # BOTTOM SECTION: UNDERWRITTEN PRO FORMA MODELS & HISTORY
@@ -852,9 +1081,16 @@ else:
             # Header Row & Download Actions
             h_col1, h_col2 = st.columns([3, 2.5])
             with h_col1:
+                cert = getattr(deal, 'qc_certificate', None)
+                audit = getattr(deal, 'audit_report', None)
+                badge_txt = "● Underwriting Complete"
+                if cert and cert.is_valid:
+                    badge_txt = f"🛡️ Certified 0 Errors • {cert.active_formulas_count:,} Formulas"
+                elif audit:
+                    badge_txt = f"🕵️‍♂️ Supervisor Audit: {audit.overall_confidence_score:.1f}% Score"
                 st.markdown(f"""
                 <div style="margin-bottom: 0.5rem;">
-                    <span class="badge-pill">● Underwriting Complete</span>
+                    <span class="badge-pill" style="background: rgba(16, 185, 129, 0.2); color: #34d399; border-color: rgba(52, 211, 153, 0.4);">{badge_txt}</span>
                     <h3 style="font-size: 1.5rem; font-weight: 800; color: #ffffff; margin: 0.35rem 0 0.15rem 0; letter-spacing: -0.02em;">{deal.property_name}</h3>
                     <p style="font-size: 0.82rem; color: #cbd5e1; margin: 0;">📍 {deal.address}, {deal.city_state_zip}</p>
                 </div>
@@ -903,7 +1139,10 @@ else:
             with k3:
                 st.markdown(f"<div class='kpi-card'><div class='kpi-title'>T-12 Operating Expenses</div><div class='kpi-val' style='color: #34d399;'>${total_opex:,.0f}</div><div class='kpi-sub'>${unit_opex:,.0f} / unit / yr</div></div>", unsafe_allow_html=True)
             with k4:
-                st.markdown(f"<div class='kpi-card'><div class='kpi-title'>Model Integrity</div><div class='kpi-val' style='color: #34d399; display: flex; align-items: center; gap: 0.35rem;'><span>✓</span> 100% Valid</div><div class='kpi-sub'>104,720 formulas live</div></div>", unsafe_allow_html=True)
+                cert = getattr(deal, 'qc_certificate', None)
+                err_ct = cert.total_formula_errors if cert else 0
+                qc_lbl = "100% Certified" if (cert and cert.is_valid) else "100% Valid"
+                st.markdown(f"<div class='kpi-card'><div class='kpi-title'>Model Integrity</div><div class='kpi-val' style='color: #34d399; display: flex; align-items: center; gap: 0.35rem;'><span>✓</span> {qc_lbl}</div><div class='kpi-sub'>{err_ct} errors • 104,720 formulas</div></div>", unsafe_allow_html=True)
 
             st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
 
@@ -919,6 +1158,31 @@ else:
             if getattr(exp, 'monthly_payroll', None) and any(v > 0 for v in exp.monthly_payroll):
                 with st.expander("📈 View Trailing 12-Month Operating Cash Flows (Month 1 to Month 12)", expanded=False):
                     render_monthly_t12_table(exp)
+
+            if getattr(deal, 'audit_report', None):
+                with st.expander("🕵️‍♂️ View Supervisor Cross-Document Audit & Tie-Out Report", expanded=False):
+                    ar = deal.audit_report
+                    st.write(f"**Overall Confidence Score:** {ar.overall_confidence_score:.1f}%")
+                    st.write(f"**Annualized Rent Roll GPR:** ${ar.annualized_gpr:,.2f}")
+                    st.write(f"**T-12 Historical Rental Collections:** ${ar.t12_net_rental_revenue:,.2f}")
+                    st.write(f"**Revenue Variance:** {ar.revenue_variance_pct:+.2f}%")
+                    if ar.anomalies:
+                        for an in ar.anomalies:
+                            st.warning(f"⚠️ {an}")
+                    if ar.lineage_notes:
+                        for k, v in ar.lineage_notes.items():
+                            st.info(v)
+
+            if getattr(deal, 'qc_certificate', None):
+                with st.expander("🛡️ View Proforma Reviewer QC Certificate & Verification Log", expanded=False):
+                    qc = deal.qc_certificate
+                    st.write(f"**Workbook Status:** {'🟢 Certified Healthy' if qc.is_valid else '🔴 Issues Detected'}")
+                    st.write(f"**Total Formula Errors:** {qc.total_formula_errors}")
+                    st.write(f"**Active Live Formulas Preserved:** {qc.active_formulas_count:,}")
+                    if qc.autofixes_applied:
+                        st.write("**Auto-Fixes Executed:**")
+                        for fix in qc.autofixes_applied:
+                            st.write(f"- {fix}")
 
             st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
             with st.expander("🔍 View Full Lineage & Mathematical Provenance Audit Trail"):

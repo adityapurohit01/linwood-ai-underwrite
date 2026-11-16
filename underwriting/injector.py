@@ -267,4 +267,13 @@ def inject_waterman_model(
     except Exception:
         pass
 
+    # 7. Agent 6 (Proforma Reviewer): Post-injection verification & auto-repair
+    try:
+        from .ai_agents import ProformaReviewerAgent
+        qc_cert = ProformaReviewerAgent.verify_and_autofix_workbook(abs_output)
+        if deal is not None:
+            deal.qc_certificate = qc_cert
+    except Exception:
+        pass
+
     return abs_output

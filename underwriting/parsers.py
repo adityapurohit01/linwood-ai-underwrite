@@ -9,8 +9,15 @@ import re
 from typing import List, Dict, Tuple, Optional
 import openpyxl
 import xlrd
-from .models import DealUnderwriting, UnitMixItem, T12Expenses
-from .ai_agents import RentRollAgent, T12FinancialAgent, OMIntelligenceAgent, DealSynthesizerAgent
+from .models import DealUnderwriting, UnitMixItem, T12Expenses, SupervisorAuditReport, ReviewerQCCertificate
+from .ai_agents import (
+    RentRollAgent,
+    T12FinancialAgent,
+    OMIntelligenceAgent,
+    DealSynthesizerAgent,
+    UnderwritingSupervisorAgent,
+    ProformaReviewerAgent
+)
 
 
 def identify_file_roles(files: List[str], data_dir: str) -> Dict[str, Optional[str]]:
@@ -148,7 +155,7 @@ def parse_generic_dataroom(
         except Exception:
             pass
 
-    # Agent 4: Deal Synthesis & QC
+    # Agent 4: Deal Synthesis
     deal = DealSynthesizerAgent.synthesize(
         unit_mix=unit_mix,
         t12_expenses=t12_expenses,
@@ -157,6 +164,21 @@ def parse_generic_dataroom(
         user_price=default_price,
         lineage_map=lineage
     )
+
+    # Agent 5: Executive Supervisor Audit & Cross-Reconciliation
+    audit_report = UnderwritingSupervisorAgent.audit_and_reconcile(
+        deal=deal,
+        rr_path=roles.get('rent_roll'),
+        t12_path=roles.get('t12'),
+        om_path=roles.get('om')
+    )
+    deal.audit_report = audit_report
+
+    # Agent 6: Proforma Reviewer Pre-Flight Auto-Fix
+    preflight_fixes = ProformaReviewerAgent.preflight_autofix(deal)
+    if preflight_fixes:
+        deal.lineage["reviewer_preflight"] = "; ".join(preflight_fixes)
+
     return deal
 
 
