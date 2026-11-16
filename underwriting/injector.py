@@ -31,13 +31,6 @@ def inject_waterman_model(
     with zipfile.ZipFile(abs_template, 'r') as zin:
         files = {name: zin.read(name) for name in zin.namelist()}
 
-    # Clean raw #VALUE! error cells from template sheet2 (DISCLAIMER)
-    if 'xl/worksheets/sheet2.xml' in files:
-        s2_xml = files['xl/worksheets/sheet2.xml'].decode('utf-8')
-        s2_xml = re.sub(r'<c r="J2"[^>]*>.*?</c>', '<c r="J2" s="1768"/>', s2_xml)
-        s2_xml = re.sub(r'<c r="H6"[^>]*>.*?</c>', '<c r="H6" s="2192"/>', s2_xml)
-        files['xl/worksheets/sheet2.xml'] = s2_xml.encode('utf-8')
-
     # Helper XML functions
     def set_num(xml: str, coord: str, val: float) -> str:
         # Match <c r="COORD" ...><v>...</v></c> or <c r="COORD" ...></c>
@@ -58,7 +51,7 @@ def inject_waterman_model(
         # Strip <v>...</v> and t="s" attribute so Excel treats cell as empty string ""
         pat = r'(<c r="' + coord + r'"[^>]*?>)(?:<v>[^<]*</v>|<v/>)?(</c>)'
         xml = re.sub(pat, r'\g<1>\2', xml)
-        xml = re.sub(r'(<c r="' + coord + r'"[^>]*?)\s+t="[a-z]+"', r'\1', xml)
+        xml = re.sub(r'(<c r="' + coord + r'"[^>]*?)\s+t="s"', r'\1', xml)
         return xml
 
     # =========================================================================
@@ -131,7 +124,7 @@ def inject_waterman_model(
     # Clean trailing unit mix rows to prevent #DIV/0! on Rent Roll tab
     # Clearing B{r} causes =IF(Inputs!B{r}="","-",...) to cleanly evaluate to "-"
     for r in range(start_row + len(deal.unit_mix), start_row + 25):
-        for col_letter in ['B', 'C', 'E', 'F', 'H', 'I', 'J', 'K', 'L', 'M']:
+        for col_letter in ['B', 'C', 'E', 'F', 'H', 'I', 'J', 'K', 'L']:
             s3_mod = clear_cell(s3_mod, f'{col_letter}{r}')
 
     # T-12 Operating Expenses ($/unit/yr stabilized amounts)
@@ -154,7 +147,22 @@ def inject_waterman_model(
     s3_mod = set_num(s3_mod, 'F104', getattr(exp, 'management_fee_pct', 0.0275))
     s3_mod = set_num(s3_mod, 'C105', getattr(exp, 'replacement_reserve', 15.0))
 
+    # Reset freeze pane scroll so Excel opens cleanly at row 9 (General Info) instead of jumping to row 158
+    s3_mod = s3_mod.replace('topLeftCell="A158"', 'topLeftCell="A9"')
+    s3_mod = s3_mod.replace('activeCell="A158" sqref="A158"', 'activeCell="A9" sqref="A9"')
+
     files['xl/worksheets/sheet3.xml'] = s3_mod.encode('utf-8')
+
+    # Reset CF & Annual CF view panes so they open at Month 1 and Year 1
+    if 'xl/worksheets/sheet8.xml' in files:
+        s8_xml = files['xl/worksheets/sheet8.xml'].decode('utf-8')
+        s8_mod = s8_xml.replace('topLeftCell="Q7"', 'topLeftCell="F7"').replace('activeCell="Q7" sqref="Q7"', 'activeCell="F7" sqref="F7"')
+        files['xl/worksheets/sheet8.xml'] = s8_mod.encode('utf-8')
+
+    if 'xl/worksheets/sheet9.xml' in files:
+        s9_xml = files['xl/worksheets/sheet9.xml'].decode('utf-8')
+        s9_mod = s9_xml.replace('topLeftCell="I6"', 'topLeftCell="C6"').replace('activeCell="I6" sqref="I6"', 'activeCell="C6" sqref="C6"')
+        files['xl/worksheets/sheet9.xml'] = s9_mod.encode('utf-8')
 
     # =========================================================================
     # 3. INJECT SHEET 4: Trailing 12 (xl/worksheets/sheet4.xml)
