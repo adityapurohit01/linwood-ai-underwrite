@@ -565,6 +565,45 @@ Lines and Annual Totals:
         monthly_buckets = defaultdict(lambda: [0.0] * 12)
         annual_buckets = defaultdict(float)
 
+        # Priority 1: Institutional Section Summary extraction for Operating Expenses
+        expense_sections = {
+            'payroll': (['total personnel costs', 'total salary expenses', 'total payroll', 'personnel costs', 'salary expenses', 'payroll'], []),
+            'utilities': (['total utilities', 'total utility expenses', 'utilities', 'utility expenses'], ['reimburse', 'income']),
+            'repairs_maint': (['total other r&m', 'total maintenance expenses', 'total repairs & maintenance', 'total repairs and maintenance', 'total repairs', 'repairs & maintenance', 'maintenance expenses'], ['recurring']),
+            'turnover': (['total turnover r&m', 'total turnover expenses', 'total turnover', 'total turnkey expense', 'turnover', 'turnkey'], []),
+            'marketing': (['total marketing & leasing costs', 'total marketing expenses', 'total marketing & advertising', 'total marketing', 'marketing & leasing', 'marketing expenses'], []),
+            'general_admin': (['total general & administrative', 'total general and administrative', 'total administrative expenses', 'total g&a', 'general & administrative', 'administrative expenses'], ['contract / recurring', 'recurring']),
+            'insurance': (['total taxes & insurance', 'total insurance', 'taxes & insurance', 'insurance'], ['general liability', 'property insurance', 'renters']),
+            'real_estate_taxes': (['mf500300', 'real estate taxes', 'ad valorem'], ['and insurance', '& insurance', 'payroll']),
+        }
+
+        matched_sections = set()
+        for cat, (keywords, excludes) in expense_sections.items():
+            best_line = None
+            for kw in keywords:
+                for it in lines:
+                    lbl = it["label"].strip().lower()
+                    if kw in lbl and not any(e in lbl for e in excludes):
+                        best_line = it
+                        break
+                if best_line:
+                    break
+            if best_line and best_line["nums"]:
+                nums = best_line["nums"]
+                if len(nums) >= 12:
+                    if len(nums) >= 13 and abs(sum(nums[1:13]) - nums[0]) < 10:
+                        m_vals = [abs(float(v)) for v in nums[1:13]]
+                        tot = abs(float(nums[0]))
+                    else:
+                        m_vals = [abs(float(v)) for v in nums[:12]]
+                        tot = abs(float(nums[12])) if len(nums) > 12 else sum(m_vals)
+                else:
+                    tot = abs(float(nums[-1]))
+                    m_vals = [tot / 12.0] * 12
+                monthly_buckets[cat] = m_vals
+                annual_buckets[cat] = tot
+                matched_sections.add(cat)
+
         has_detailed_mr = any(
             ('mf400500' in it["label"].lower() or ('market rent' in it["label"].lower() and not it["label"].lower().strip().startswith(('total', 'subtotal'))))
             for it in lines
@@ -574,13 +613,17 @@ Lines and Annual Totals:
             lbl_clean = item["label"].strip().lower()
             cat = label_to_cat.get(lbl_clean)
 
+            # Skip categories already captured by institutional section summaries
+            if cat in matched_sections:
+                continue
+
             # Roll-up & summary rows must never double-count into detailed lines
             is_summary = (
                 lbl_clean.startswith(('total', 'subtotal', 'net rental', 'net operating', 'noi', 'ebitda', 'cnoi', 'summary', 'net bad debt'))
                 or lbl_clean in ['gross potential rent', 'total income', 'total operating expenses', 'net operating income', 'controllable expenses', 'total adjustments', 'total reimbursement income']
             )
 
-            # Deterministic COA semantic safeguards
+            # Deterministic COA semantic safeguards for revenue items
             if any(k in lbl_clean for k in ['market rent', 'gross potential', 'gross market', 'rent - market', 'mf400500']):
                 if not any(k in lbl_clean for k in ['advertising', 'adver', 'flyer', 'promotion']):
                     if not lbl_clean.startswith(('total', 'subtotal', 'net ')):
