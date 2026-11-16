@@ -565,22 +565,54 @@ Lines and Annual Totals:
         monthly_buckets = defaultdict(lambda: [0.0] * 12)
         annual_buckets = defaultdict(float)
 
+        has_detailed_mr = any(
+            ('mf400500' in it["label"].lower() or ('market rent' in it["label"].lower() and not it["label"].lower().strip().startswith(('total', 'subtotal'))))
+            for it in lines
+        )
+
         for item in lines:
             lbl_clean = item["label"].strip().lower()
             cat = label_to_cat.get(lbl_clean)
 
+            # Roll-up & summary rows must never double-count into detailed lines
+            is_summary = (
+                lbl_clean.startswith(('total', 'subtotal', 'net rental', 'net operating', 'noi', 'ebitda', 'cnoi', 'summary', 'net bad debt'))
+                or lbl_clean in ['gross potential rent', 'total income', 'total operating expenses', 'net operating income', 'controllable expenses', 'total adjustments', 'total reimbursement income']
+            )
+
             # Deterministic COA semantic safeguards
             if any(k in lbl_clean for k in ['market rent', 'gross potential', 'gross market', 'rent - market', 'mf400500']):
                 if not any(k in lbl_clean for k in ['advertising', 'adver', 'flyer', 'promotion']):
-                    cat = 'market_rent'
+                    if not lbl_clean.startswith(('total', 'subtotal', 'net ')):
+                        if not (has_detailed_mr and lbl_clean == 'gross potential rent'):
+                            cat = 'market_rent'
+                        else:
+                            cat = 'ignore'
+                    else:
+                        cat = 'ignore'
             elif any(k in lbl_clean for k in ['loss to lease', 'gain / (loss) to lease', 'gain/(loss) to lease']):
-                cat = 'loss_to_lease'
+                if not lbl_clean.startswith(('total', 'subtotal', 'net ')):
+                    cat = 'loss_to_lease'
+                else:
+                    cat = 'ignore'
             elif any(k in lbl_clean for k in ['rent concession', 'rent concessions']):
-                cat = 'concessions'
-            elif any(k in lbl_clean for k in ['vacancy loss', 'physical vacancy', 'model unit', 'units out of service']):
-                cat = 'vacancy'
+                if not lbl_clean.startswith(('total', 'subtotal', 'net ')):
+                    cat = 'concessions'
+                else:
+                    cat = 'ignore'
+            elif any(k in lbl_clean for k in ['vacancy loss', 'physical vacancy', 'model unit', 'units out of service', 'vacancy']):
+                if not lbl_clean.startswith(('total', 'subtotal', 'net ')):
+                    cat = 'vacancy'
+                else:
+                    cat = 'ignore'
             elif any(k in lbl_clean for k in ['write offs - rent', 'bad debt']):
-                cat = 'bad_debt'
+                if not lbl_clean.startswith(('total', 'subtotal', 'net ')):
+                    cat = 'bad_debt'
+                else:
+                    cat = 'ignore'
+
+            if is_summary and cat in ['market_rent', 'loss_to_lease', 'concessions', 'vacancy', 'bad_debt']:
+                cat = 'ignore'
 
             if not cat or cat == 'ignore':
                 continue
