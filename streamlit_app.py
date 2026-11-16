@@ -193,27 +193,9 @@ def render_monthly_t12_table(exp):
     )
     st.markdown(html, unsafe_allow_html=True)
 
-# Initialize default demo deal if session state is empty
+# Initialize session state for underwritten deals
 if 'deals_history' not in st.session_state:
     st.session_state['deals_history'] = []
-    
-    # Ensure default demo pro forma is pre-generated so download works out of the box
-    demo_file = os.path.join(OUTPUT_DIR, "Waterman_Oakwood_Ridge_Demo.xlsx")
-    demo_deal = parse_generic_dataroom("", default_name="Oakwood Ridge Apartments", default_price=18500000.0)
-    if not os.path.exists(demo_file) and os.path.exists(TEMPLATE_PATH):
-        try:
-            inject_waterman_model(TEMPLATE_PATH, demo_deal, demo_file)
-        except Exception:
-            pass
-
-    if os.path.exists(demo_file):
-        st.session_state['deals_history'].append({
-            "id": "demo_oakwood",
-            "name": demo_deal.property_name,
-            "deal": demo_deal,
-            "excel_path": demo_file,
-            "timestamp": datetime.datetime.now().strftime("%b %d, %Y • %I:%M %p")
-        })
 
 # ==============================================================================
 # Bespoke Ultra-Clean Institutional Styling (High Contrast & Perfect Theme Colors)
@@ -701,8 +683,16 @@ st.markdown("""
 
 with st.form("custom_upload_form", clear_on_submit=False):
     c1, c2 = st.columns(2)
-    prop_name = c1.text_input("Property Name", value="Parkview Residences", placeholder="e.g. Parkview Residences")
-    prop_price = c2.number_input("Target Purchase Price ($)", min_value=100000.0, value=25000000.0, step=250000.0, format="%.2f")
+    prop_name = c1.text_input("Property Name (Optional)", value="", placeholder="Leave blank to auto-detect from data room")
+    prop_price_input = c2.number_input(
+        "Target Purchase Price ($) — Optional",
+        min_value=0.0,
+        value=0.0,
+        step=250000.0,
+        format="%.2f",
+        help="Leave 0 to auto-extract from OM / data room (e.g. Miars Farm: 16,850,000 | ARIUM: 84,000,000 | REVL: 112,000,000)"
+    )
+    prop_price = prop_price_input if prop_price_input > 0 else None
     
     st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
 
@@ -797,7 +787,7 @@ if start_underwrite_btn:
 
         deal_data = parse_generic_dataroom(
             upload_session_dir,
-            default_name=prop_name,
+            default_name=prop_name.strip() if prop_name.strip() else None,
             default_price=prop_price,
             rr_file_path=rr_saved_path,
             t12_file_path=t12_saved_path,
@@ -805,7 +795,7 @@ if start_underwrite_btn:
         )
         
         st.write("⚡ **Excel Injection Engine:** Injecting Inputs (Sheet 3) & Trailing 12 (Sheet 4) — 104,720 formulas preserved.")
-        safe_name = "".join(c for c in prop_name if c.isalnum() or c in (" ", "_")).strip().replace(" ", "_")
+        safe_name = "".join(c for c in deal_data.property_name if c.isalnum() or c in (" ", "_")).strip().replace(" ", "_")
         out_file = os.path.join(OUTPUT_DIR, f"Waterman_{safe_name}_{session_id}.xlsx")
         inject_waterman_model(TEMPLATE_PATH, deal_data, out_file)
         
@@ -813,7 +803,7 @@ if start_underwrite_btn:
         
         st.session_state['deals_history'].insert(0, {
             "id": session_id,
-            "name": prop_name,
+            "name": deal_data.property_name,
             "deal": deal_data,
             "excel_path": out_file,
             "timestamp": datetime.datetime.now().strftime("%b %d, %Y • %I:%M %p")

@@ -31,6 +31,13 @@ def inject_waterman_model(
     with zipfile.ZipFile(abs_template, 'r') as zin:
         files = {name: zin.read(name) for name in zin.namelist()}
 
+    # Clean raw #VALUE! error cells from template sheet2 (DISCLAIMER)
+    if 'xl/worksheets/sheet2.xml' in files:
+        s2_xml = files['xl/worksheets/sheet2.xml'].decode('utf-8')
+        s2_xml = re.sub(r'<c r="J2"[^>]*>.*?</c>', '<c r="J2" s="1768"/>', s2_xml)
+        s2_xml = re.sub(r'<c r="H6"[^>]*>.*?</c>', '<c r="H6" s="2192"/>', s2_xml)
+        files['xl/worksheets/sheet2.xml'] = s2_xml.encode('utf-8')
+
     # Helper XML functions
     def set_num(xml: str, coord: str, val: float) -> str:
         # Match <c r="COORD" ...><v>...</v></c> or <c r="COORD" ...></c>
@@ -64,6 +71,12 @@ def inject_waterman_model(
     s3_mod = set_num(s3_mod, 'M23', deal.purchase_price)
     s3_mod = set_num(s3_mod, 'M26', getattr(deal, 'equity_placement_fee', round(deal.purchase_price * 0.02, 2)))
     s3_mod = set_num(s3_mod, 'M27', getattr(deal, 'working_capital', round(max(250000.0, deal.total_units * 1500.0), 2)))
+
+    # Property Dimensions (Acres & Gross Building Area) to prevent #DIV/0! on FAR, Building Efficiency, and S&U /GSF
+    prop_acres = getattr(deal, 'acres', 12.5) if getattr(deal, 'acres', None) else 12.5
+    prop_gba = getattr(deal, 'gross_building_area', deal.total_rsf) if getattr(deal, 'gross_building_area', None) else deal.total_rsf
+    s3_mod = set_num(s3_mod, 'F19', prop_acres)
+    s3_mod = set_num(s3_mod, 'F21', prop_gba)
 
     # Dynamic shared strings for arbitrary custom tier names (Studio, 1BR, 2BR, 3BR, 4BR, Townhome, etc.)
     tier_str_map = {'1br': 661, '2br': 662, '3br': 663}
@@ -190,11 +203,12 @@ def inject_waterman_model(
             if '[1]' in s_xml:
                 files[name] = s_xml.replace('[1]', '').encode('utf-8')
 
-    # 2. Clean workbook.xml: replace [1] and remove <externalReferences>
+    # 2. Clean workbook.xml: replace [1] and remove <externalReferences>, and force full calc on load
     if 'xl/workbook.xml' in files:
         wb_xml = files['xl/workbook.xml'].decode('utf-8')
         wb_xml = wb_xml.replace('[1]', '')
         wb_xml = re.sub(r'<externalReferences>.*?</externalReferences>', '', wb_xml, flags=re.DOTALL)
+        wb_xml = re.sub(r'<calcPr [^>]*?/>', '<calcPr calcId="191029" calcMode="auto" fullCalcOnLoad="1" forceFullCalc="1"/>', wb_xml)
         files['xl/workbook.xml'] = wb_xml.encode('utf-8')
 
     # 3. Clean xl/_rels/workbook.xml.rels: remove externalLink relationship

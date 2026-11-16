@@ -73,6 +73,8 @@ class DealUnderwriting:
     unit_mix: List[UnitMixItem]
     t12_expenses: T12Expenses
     year_built: str = "1998 / Renovated 2021"
+    acres: float = 12.5
+    gross_building_area: float = 0.0
     
     # Capitalization & Closing Costs
     equity_placement_fee: float = 350000.0
